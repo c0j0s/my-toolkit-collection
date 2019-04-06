@@ -1,0 +1,4 @@
+english line here
+chinese line here
+
+other characters...
