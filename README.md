@@ -23,9 +23,9 @@ output.pptx
 
 ## Procedures
 __1. Prepare Raw TXT Inputs__  
-As the scenario here is to create slices with Chinese and English captions, the raw txt input is been formatted to remove any unnecessary characters and create a fix Chinese after English caption format for easy processing.  
+As the scenario here is to create slices with Chinese and English captions, the raw txt input will be formatted to remove any unnecessary characters and create a fix Chinese after English caption format for easy processing.  
 
-__2. Format TXT Inpits__  
+__2. Format TXT Inputs__  
 Next the captions were merged to create a csv with both languges side by side such that each line represents a slide in txt form.
 
 __3. Generate PPT Slides__  
