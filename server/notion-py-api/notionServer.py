@@ -34,10 +34,12 @@ def insertDetailToNotion():
             "detail":[]
     }
     try:
-        source = str(request.data.decode('UTF-8'))
+        #remove whatsapp bold
+        source = str(request.data.decode('UTF-8')).replace("*","") 
+
         if source is "":
             raise Exception("No source provided.")
-
+        
         # preprocess source, return: detail object
         my_detail = notionUtil.preProcessDetail(source)
 
