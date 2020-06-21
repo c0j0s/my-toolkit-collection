@@ -1,0 +1,67 @@
+<div class="mt-2 mb-2">
+  <h1>ToolKit for NS</h1>
+  <hr>
+</div>
+
+<mat-card class="d-flex mb-2">
+  <h3 class="mr-2">{{daysToOrd}}</h3><p> Days To ORD!</p>
+</mat-card>
+
+<mat-accordion>
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        TO Detail Generator
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <form class="ns-detail-gen-form">
+      <mat-form-field class="w-100 mb-2">
+        <mat-label>Detail Source:</mat-label>
+        <textarea matInput cdkTextareaAutosize #autosize="cdkTextareaAutosize" cdkAutosizeMinRows="5" [formControl]="detailSourceFormControl" [errorStateMatcher]="matcher"
+          cdkAutosizeMaxRows="10">
+        </textarea>
+        <mat-error *ngIf="detailSourceFormControl.hasError('required')">
+          Detail source <strong>required</strong>
+        </mat-error>
+      </mat-form-field>
+      <div class="d-flex">
+        <button mat-raised-button color="primary" (click)="submitToNotion()">Generate</button>
+        <mat-spinner [diameter]=25 [color]="primary" class="m-1" *ngIf="loading"></mat-spinner>
+      </div>
+    </form>
+  </mat-expansion-panel>
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      TO Detail Reporting Template
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+  <form class="ns-detail-gen-form">
+    <div class="row">
+      <div class="col-sm mb-2">
+        <mat-form-field class="w-100 mb-2">
+          <mat-label>Detail Title:</mat-label>
+          <input matInput [formControl]="detailTitleFormControl" [errorStateMatcher]="matcher">
+          <mat-error *ngIf="detailTitleFormControl.hasError('required')">
+            Detail title <strong>required</strong>
+          </mat-error>
+        </mat-form-field>
+        <div class="d-flex">
+          <button mat-raised-button color="primary" (click)="getDetailTemplate()">Fetch</button>
+        </div>
+      </div>
+      <div class="col-sm b-1">
+        <p>
+          1 x {{detail.veh_type}} mov frm [] to []<br>
+          MID : {{detail.veh_mid}}<br>
+          TO  : LCP JUN SHENG<br>
+          VC  : []<br>
+          AVI : {{detail.veh_avi}}<br>
+          FE  : {{detail.veh_fe}}<br>
+          PUR : []<br>
+        </p>
+      </div>
+    </div>
+  </form>
+</mat-expansion-panel>
+</mat-accordion>
