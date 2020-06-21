@@ -23,6 +23,8 @@ import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { ProfileComponent } from './profile/profile.component';
 import { HomeComponent } from './home/home.component';
 import { NsComponent } from './ns/ns.component';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 
 const isIE = window.navigator.userAgent.indexOf('MSIE ') > -1 || window.navigator.userAgent.indexOf('Trident/') > -1;
 
@@ -75,7 +77,8 @@ const isIE = window.navigator.userAgent.indexOf('MSIE ') > -1 || window.navigato
         ['Enter_the_Graph_Endpoint_Herev1.0/me', ['user.read']]
       ],
       extraQueryParameters: {}
-    })
+    }),
+    ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })
   ],
   providers: [
     {

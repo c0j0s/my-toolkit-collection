@@ -4,7 +4,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material/core';
 
-const NOTION_SERVER_ENDPOINT = 'http://152.67.109.29:5000/';
+const NOTION_SERVER_ENDPOINT = 'https://026eee0dacbf.ap.ngrok.io/';
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
@@ -21,7 +21,7 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
 export class NsComponent implements OnInit {
   daysToOrd = 0
   loading = false;
-  detail = {}
+  detail = {"veh_type":"","veh_mid":"","veh_avi":"","veh_fe":""}
 
   detailSourceFormControl = new FormControl('', [Validators.required]);
   detailTitleFormControl = new FormControl('', [Validators.required]);
