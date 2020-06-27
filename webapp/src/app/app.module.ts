@@ -26,6 +26,9 @@ import { NsComponent } from './ns/ns.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
 
+import { AngularFireModule } from '@angular/fire';
+import { AngularFireDatabaseModule } from '@angular/fire/database';
+
 const isIE = window.navigator.userAgent.indexOf('MSIE ') > -1 || window.navigator.userAgent.indexOf('Trident/') > -1;
 
 @NgModule({
@@ -53,6 +56,8 @@ const isIE = window.navigator.userAgent.indexOf('MSIE ') > -1 || window.navigato
     AppRoutingModule,
     FormsModule,
     ReactiveFormsModule,
+    AngularFireModule.initializeApp(environment.firebaseConfig, 'cjs-library'),
+    AngularFireDatabaseModule,
     MsalModule.forRoot({
       auth: {
         clientId: '71831d47-a2cb-4449-bbdf-1903d91672a5',

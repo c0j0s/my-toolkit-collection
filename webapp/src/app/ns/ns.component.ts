@@ -3,8 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material/core';
-
-const NOTION_SERVER_ENDPOINT = 'https://026eee0dacbf.ap.ngrok.io/';
+import { FirebaseService } from '../services/firebase.service'
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
@@ -19,21 +18,24 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
   styleUrls: ['./ns.component.css']
 })
 export class NsComponent implements OnInit {
-  daysToOrd = 0
-  loading = false;
-  detail = {"veh_type":"","veh_mid":"","veh_avi":"","veh_fe":""}
+  notion_endpoints;
+  daysToOrd = 0;
+  loading = true;
+  detail = {"veh_type":"","veh_mid":"","veh_avi":"","veh_fe":"","poc":""}
 
   detailSourceFormControl = new FormControl('', [Validators.required]);
   detailTitleFormControl = new FormControl('', [Validators.required]);
 
   matcher = new MyErrorStateMatcher();
 
-  constructor(private _snackBar: MatSnackBar, private http: HttpClient) { }
+  constructor(private firebaseService:FirebaseService, private _snackBar: MatSnackBar, private http: HttpClient) { }
 
   ngOnInit() {
-    var ord = new Date("2021-08-15"); 
-    var today = new Date();
-    this.daysToOrd = Math.round((ord.getTime() - today.getTime()) / (24*60*60*1000))
+    this.firebaseService.getConfig().then(snapshot => {
+      this.notion_endpoints = snapshot.child("endpoint").val()
+      this.daysToOrd = Math.round((new Date(snapshot.child("ord_countdown/ord_date").val().toString()).getTime() - new Date().getTime()) / (24*60*60*1000))
+      this.loading = false
+    });
   }
 
   submitToNotion() {
@@ -41,7 +43,7 @@ export class NsComponent implements OnInit {
       this.loading = true
       this.detailSourceFormControl.disable()
 
-      this.http.post(NOTION_SERVER_ENDPOINT + "insertDetailToNotion/", this.detailSourceFormControl.value)
+      this.http.post(this.notion_endpoints["notion_server"] + this.notion_endpoints["insert_detail_to_notion"], this.detailSourceFormControl.value)
         .subscribe(
           (val) => {
             let msg = ""
@@ -62,7 +64,7 @@ export class NsComponent implements OnInit {
 
   getDetailTemplate(){
     if (this.detailTitleFormControl.value != "" && !this.loading) {
-      this.http.get(NOTION_SERVER_ENDPOINT + "getDetailTemplate/" + this.detailTitleFormControl.value )
+      this.http.get(this.notion_endpoints["notion_server"] + this.notion_endpoints["detail_report_template"] + this.detailTitleFormControl.value )
         .subscribe(
           (val) => {
             if (val["data"] != "") {

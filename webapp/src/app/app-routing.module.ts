@@ -4,6 +4,7 @@ import { MsalGuard } from '@azure/msal-angular';
 import { HomeComponent } from './home/home.component';
 import { ProfileComponent } from './profile/profile.component';
 import { NsComponent } from './ns/ns.component';
+import { SettingsComponent } from './settings/settings.module'
 
 const routes: Routes = [
   {
@@ -16,6 +17,13 @@ const routes: Routes = [
   {
     path: 'ns',
     component: NsComponent,
+    canActivate: [
+      MsalGuard
+    ]
+  },
+  {
+    path: 'settings',
+    component: SettingsComponent,
     canActivate: [
       MsalGuard
     ]

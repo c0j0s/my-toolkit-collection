@@ -23,6 +23,8 @@ def getDetailTemplate(detail):
         data['veh_type'] = detail_ref.assigned_vehicle[0].vehicle_type_ref[0].title
         data['veh_avi'] = detail_ref.boc_record[0].fe
         data['veh_fe'] = detail_ref.boc_record[0].avi
+        data['poc'] = detail_ref.poc
+        data['poc_contact_no'] = detail_ref.poc_contact_no
     response = jsonify({"status":"Success","data":data,"msg":msg})
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response 
@@ -73,4 +75,4 @@ def insertDetailToNotion():
 if __name__ == "__main__":
     app.debug = False 
     # app.run(host='127.0.0.1', port=5000)
-    app.run(host='0.0.0.0', port=5000,ssl_context=('/etc/letsencrypt/csr/0000_csr-certbot.pem', '/etc/letsencrypt/keys/0000_key-certbot.pem'))
+    app.run(host='0.0.0.0', port=5000)
