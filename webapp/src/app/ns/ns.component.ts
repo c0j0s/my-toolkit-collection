@@ -21,7 +21,7 @@ export class NsComponent implements OnInit {
   notion_endpoints;
   daysToOrd = 0;
   loading = true;
-  detail = {"veh_type":"","veh_mid":"","veh_avi":"","veh_fe":"","poc":""}
+  detail = {"veh_type":"","veh_mid":"","veh_avi":"","veh_fe":"","poc":"","poc_contact_no":""}
 
   detailSourceFormControl = new FormControl('', [Validators.required]);
   detailTitleFormControl = new FormControl('', [Validators.required]);

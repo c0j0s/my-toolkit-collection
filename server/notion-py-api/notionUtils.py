@@ -75,6 +75,7 @@ class NotionUtils(object):
         self.client = NotionClient(token_v2=self.configs["token"])
         self.notion_pages = self.configs["notion_pages"]
         self.notion_templates = self.configs["notion_templates"]
+        self.dang = self.configs["dang"]
 
     def preProcessDetail(self,rawInput):
         myDetail = []
@@ -212,3 +213,15 @@ class NotionUtils(object):
 
         result = cv.collection.get_rows(search=detail.title)[0]
         return result
+
+    def insertSignInRecord(self,result):
+        cv = self.client.get_collection_view(self.notion_pages['signin_record'])
+        row = cv.collection.add_row()
+        if int(result["status"]["code"]) == 30001:
+            row.value = 0
+        else:  
+            row.value = 5
+
+        row.result = result["status"]["message"]
+
+    # def updateBookReadingProgress(self,result):

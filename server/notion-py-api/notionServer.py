@@ -1,8 +1,14 @@
 from flask import Flask, request, jsonify
 from notionUtils import Detail, NotionUtils
+from dangdangUtils import DangDangUtils
+import time
+import atexit
+
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 notionUtil = NotionUtils("./config.json")
+dangdangUtil = DangDangUtils(notionUtil.dang['dang_endpoint'],notionUtil.dang['token'])
 
 @app.route('/')
 def root():
@@ -72,7 +78,20 @@ def insertDetailToNotion():
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
+@app.route('/dailySignIn/')
+def dailySignIn():
+    notionUtil.insertSignInRecord(dangdangUtil.dailySignIn())
+    return "Done"
+
+cron = BackgroundScheduler(daemon=True)
+# Explicitly kick off the background thread
+
+cron.add_job(dailySignIn,'interval',hours=24)
+cron.start()
+
+atexit.register(lambda: cron.shutdown(wait=False))
+
 if __name__ == "__main__":
-    app.debug = False 
+    app.debug = True 
     # app.run(host='127.0.0.1', port=5000)
     app.run(host='0.0.0.0', port=5000)
