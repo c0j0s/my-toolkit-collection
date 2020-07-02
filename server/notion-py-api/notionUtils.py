@@ -44,9 +44,15 @@ class Detail(object):
                 self.endTime = hrs[1]
             elif re.findall(r"(?=JUN.?SHENG \()(.*)(?=\))",line):
                 self.vehType = re.findall(r"(?<=x )(.*)(?=:)",line)[0].upper()
-                self.mid = re.findall(r"(?<=JUNSHENG \()(MID[0-9]{5})(?=\))",line)[0]
-                if len(self.mid) == 0:
-                    self.mid = re.findall(r"(?<=JUN SHENG \()(MID[0-9]{5})(?=\))",line)[0]
+                mid = re.findall(r"(?<=JUNSHENG \()(MID.?[0-9]{5})(?=\))",line)
+                if len(mid) == 0:
+                    mid = re.findall(r"(?<=JUN SHENG \()(MID.?[0-9]{5})(?=\))",line)
+                
+                # check again
+                if len(mid) == 0:
+                    raise Exception("Detail Mid Number Error")
+                
+                self.mid = mid[0]
                 self.mid = self.mid.replace("MID","")
                 
     def toJSON(self):
@@ -96,7 +102,7 @@ class NotionUtils(object):
 
             if line.startswith("POC"):
                 for line in singleTmp:
-                    if re.findall(r"JUN.?SHENG",line):
+                    if re.findall(r"JUN.?SHENG",line) or re.findall(r"JUNSHENG",line):
                         x = Detail()
                         x.buildFromSource(singleTmp)
                         myDetail.append(x)
@@ -222,6 +228,6 @@ class NotionUtils(object):
         else:  
             row.value = 5
 
-        row.result = result["status"]["message"]
+        row.result = result
 
     # def updateBookReadingProgress(self,result):

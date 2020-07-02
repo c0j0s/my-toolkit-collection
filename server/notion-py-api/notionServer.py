@@ -3,6 +3,7 @@ from notionUtils import Detail, NotionUtils
 from dangdangUtils import DangDangUtils
 import time
 import atexit
+import traceback
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -72,8 +73,10 @@ def insertDetailToNotion():
         
         result["status"] = "Success"
     except Exception as e:
-        result["status"] = e
+        traceback.print_tb(e.__traceback__)
+        result["status"] = str(e)
 
+    print(result)
     response = jsonify(result)
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
