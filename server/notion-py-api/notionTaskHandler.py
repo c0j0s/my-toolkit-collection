@@ -1,4 +1,4 @@
-from notion.collection  import NotionDate 
+from notion.collection import NotionDate
 from notionUtils import Detail, NotionUtils
 from dangdangUtils import DangDangUtils
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -25,8 +25,10 @@ def gen_table_row_callback(record, changes):
                 log("Detail generation task error: " + str(e))
         time.sleep(3)
 
-def genReportingText(veh_type,mid,avi,fe):
-    return "1 x {} moving off from [] to []\nMID : {}\nTO : LCP JUN SHENG\nVC : []\nAVI : {}\nFE : {}\nPurpose : []".format(veh_type,mid,avi,fe)
+
+def genReportingText(veh_type, mid, avi, fe):
+    return "1 x {} moving off from [] to []\nMID : {}\nTO : LCP JUN SHENG\nVC : []\nAVI : {}\nFE : {}\nPurpose : []".format(veh_type, mid, avi, fe)
+
 
 def boc_collection_row_callback(record, changes):
     if changes[0][0] is "prop_changed":
@@ -36,13 +38,14 @@ def boc_collection_row_callback(record, changes):
                     log("Boc status passed, starting sequence...")
                     mid = record.for_detail[0].assigned_vehicle[0].mid
                     veh_type = record.for_detail[0].assigned_vehicle[0].vehicle_type_ref[0].vehicle_type
-                    record.for_detail[0].reporting_template = genReportingText(veh_type,mid,record.avi,record.fe)
+                    record.for_detail[0].reporting_template = genReportingText(
+                        veh_type, mid, record.avi, record.fe)
                     record.generate_reporting_text = True
                     log("Boc status passed, Done")
-                
+
                 record.done_on = NotionDate(datetime.now())
             else:
-                if record.status == "Pass" and record.avi is "" and record.fe is  "":
+                if record.status == "Pass" and record.avi is "" and record.fe is "":
                     record.status = "Not Started"
                     log("Boc status invalid action")
         else:
@@ -51,24 +54,26 @@ def boc_collection_row_callback(record, changes):
                 log("Boc status invalid action")
         time.sleep(3)
 
+
 def config_callback(record, changes):
     if changes[0][0] is "prop_changed":
-        notion.setConfig(record.group,record.name,record.value)
+        notion.setConfig(record.group, record.name, record.value)
     time.sleep(3)
+
 
 def init():
     # config_path = "/home/opc/notion-py-api/config.json"
     config_path = "./config.json"
 
     global notion, collections
-    notion = NotionUtils(config_path,monitor=True,start_monitoring=True)
+    notion = NotionUtils(config_path, monitor=True, start_monitoring=True)
     collections = {}
 
     log("Initialising Configs")
     count = 0
     for row in notion.getTable("config").get_rows():
         if row.name is not "":
-            notion.setConfig(row.group,row.name,row.value)
+            notion.setConfig(row.group, row.name, row.value)
             row.add_callback(config_callback, callback_id="config_callback")
             count += 1
 
@@ -80,21 +85,24 @@ def init():
 
     log("Registering schedule task")
     cron = BackgroundScheduler(daemon=True)
-    cron.add_job(dangDailySignIn,'interval',hours=24)
+    cron.add_job(dangDailySignIn, 'interval', hours=24)
     cron.start()
     atexit.register(lambda: cron.shutdown(wait=False))
     log("Registering schedule task completed")
+
 
 def main():
     log("Notion Task Handler Started")
     try:
         log("Registering detail generation task table row callbacks")
         for row in collections["gen_task"].get_rows():
-            row.add_callback(gen_table_row_callback, callback_id="gen_table_row_callback")
+            row.add_callback(gen_table_row_callback,
+                             callback_id="gen_table_row_callback")
 
         log("Registering boc table row callbacks")
         for row in collections["boc"].get_rows():
-            row.add_callback(boc_collection_row_callback, callback_id="boc_collection_row_callback")
+            row.add_callback(boc_collection_row_callback,
+                             callback_id="boc_collection_row_callback")
 
         log("Ready and listening! (Ctrl-C to exit/Enter exit)")
         command = ""
@@ -112,14 +120,17 @@ def main():
         log("Program Exit")
         exit()
 
+
 def dangDailySignIn():
     log("Dang daily sign in started")
-    dangdangUtil = DangDangUtils(notion.getProperty("dang_endpoint"),notion.getProperty('dang_token'))
+    dangdangUtil = DangDangUtils(notion.getProperty(
+        "dang_endpoint"), notion.getProperty('dang_token'))
     notion.insertSignInRecord(dangdangUtil.dailySignIn())
     log("Dang daily sign in done")
 
+
 def log(msg):
-    print("[{}][{}]: {}".format(pid,datetime.now(),str(msg)))
+    print("[{}][{}]: {}".format(pid, datetime.now(), str(msg)))
     try:
         if notion.getProperty("debug").upper() == "TRUE":
             row = collections["debug"].add_row()
@@ -128,6 +139,7 @@ def log(msg):
             row.message = str(msg)
     except:
         pass
+
 
 if __name__ == "__main__":
     global pid
