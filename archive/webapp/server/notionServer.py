@@ -22,7 +22,7 @@ def getDetailTemplate(detail):
     data = {}
     msg = ""
     detail_ref = notionUtil.check_if_ref_exists(notionUtil.notion_pages['detail_list'] ,detail)
-    if detail_ref is None:
+    if detail_ref == None:
         data = ""
         msg = "No Detail Found"
     else:
@@ -46,7 +46,7 @@ def insert_detail_to_notion():
         #remove whatsapp bold
         source = str(request.data.decode('UTF-8')).replace("*","") 
 
-        if source is "":
+        if source == "":
             raise Exception("No source provided.")
         
         # preprocess source, return: detail object
@@ -81,15 +81,15 @@ def insert_detail_to_notion():
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
-@app.route('/dailySignIn/')
-def dailySignIn():
-    notionUtil.insert_sign_in_record(dangdangUtil.dailySignIn())
+@app.route('/daily_sign_in/')
+def daily_sign_in():
+    notionUtil.insert_sign_in_record(dangdangUtil.daily_sign_in())
     return "Done"
 
 cron = BackgroundScheduler(daemon=True)
 # Explicitly kick off the background thread
 
-cron.add_job(dailySignIn,'interval',hours=24)
+cron.add_job(daily_sign_in,'interval',hours=24)
 cron.start()
 
 atexit.register(lambda: cron.shutdown(wait=False))

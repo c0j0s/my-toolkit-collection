@@ -12,7 +12,7 @@ class DangDangUtils(object):
         r = requests.get(url=self.endpoint, params=PARAMS)
         return r.json() 
 
-    def dailySignIn(self):
+    def daily_sign_in(self):
         return self.get({'action': 'signin'})
 
 
@@ -20,4 +20,4 @@ class DangDangUtils(object):
 URL = "http://e.dangdang.com/media/api2.go?"
 x = DangDangUtils(URL,'')
  
-print(x.dailySignIn())
+print(x.daily_sign_in())
