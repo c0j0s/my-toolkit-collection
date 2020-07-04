@@ -76,12 +76,9 @@ class Detail(object):
 
 class NotionUtils(object):
 
-    def __init__(self, config_file_path):
+    def __init__(self, config_file_path, **kwargs):
         self.configs = json.load(open(config_file_path))
-        self.client = NotionClient(token_v2=self.configs["token"])
-        self.notion_pages = self.configs["notion_pages"]
-        self.notion_templates = self.configs["notion_templates"]
-        self.dang = self.configs["dang"]
+        self.client = NotionClient(token_v2=self.configs["token"], **kwargs)
 
     def preProcessDetail(self,rawInput):
         myDetail = []
@@ -111,8 +108,7 @@ class NotionUtils(object):
         return myDetail
 
     def checkIfRefExists(self,table,keyword):
-        cv = self.client.get_collection_view(table)
-        result = cv.collection.get_rows(search=keyword)
+        result = self.getTable(table).get_rows(search=keyword)
         if len(result) > 0:
             return result[0]
         else:
@@ -121,55 +117,51 @@ class NotionUtils(object):
     # create new record: title:mid, type:ref
     def createVehicleMidTypeRecord(self,mid,veh_type):
         # check if vehicle record exists
-        veh_ref = self.checkIfRefExists(self.notion_pages['veh_type_mid'],mid)
+        veh_ref = self.checkIfRefExists('veh_type_mid',mid)
         if veh_ref is not None:
             return veh_ref
 
         # check if vehicle type is valid
-        veh_type_ref = self.checkIfRefExists(self.notion_pages['veh_types'],veh_type)
+        veh_type_ref = self.checkIfRefExists('veh_types',veh_type)
         
         if veh_type_ref is None:
             raise Exception("Unknown Vehicle Type")
         else:
-            cv = self.client.get_collection_view(self.notion_pages['veh_type_mid'])
-            row = cv.collection.add_row()
+            cv = self.getTable('veh_type_mid')
+            row = cv.add_row()
             row.icon = '🚙'
             row.mid = mid
             row.vehicle_type_ref = veh_type_ref
 
-            veh_ref = cv.collection.get_rows(search=mid)[0]
+            veh_ref = cv.get_rows(search=mid)[0]
         
         return veh_ref
 
     def createCampRoute(self,aka):
-        camp_ref = self.checkIfRefExists(self.notion_pages['camp_route'],aka)
+        camp_ref = self.checkIfRefExists('camp_route',aka)
         if camp_ref is not None:
             return camp_ref
 
-        cv = self.client.get_collection_view(self.notion_pages['camp_route'])
-        row = cv.collection.add_row()
+        cv = self.getTable('camp_route')
+        row = cv.add_row()
         row.icon = '🔃'
         row.name = aka
         row.aka = aka
 
-        camp_ref = cv.collection.get_rows(search=aka)[0]
+        camp_ref = cv.get_rows(search=aka)[0]
         return camp_ref
 
     # get latest Detail Name
     def getLatestDetailIndex(self):
         index = 0
         maxIndex = 0
-        cv = self.client.get_collection_view(self.notion_pages['detail_list'])
-        for row in cv.collection.get_rows():
+        cv = self.getTable('detail_list')
+        for row in cv.get_rows():
             index = int(row.title.split(" ")[1])
             if index > maxIndex:
                 maxIndex = index
         maxIndex += 1
         return maxIndex
-
-    # for getting template content
-    def getTemplate(self,path):
-        return self.client.get_block(path)
 
     # for creating blocks recursively
     def appendAllBlocks(self,node,template):
@@ -180,15 +172,15 @@ class NotionUtils(object):
 
     # create a now boc record for new detail
     def createBOCRecord(self,detailIndex):
-        boc_template = self.getTemplate(self.notion_templates["boc"])
+        boc_template = self.getTemplate("boc")
         title = "Detail " + str(detailIndex) + "/1"
 
-        cv = self.client.get_collection_view(self.notion_pages['boc_record'])
-        row = cv.collection.add_row()
+        cv = self.getTable('boc_record')
+        row = cv.add_row()
         row.icon = '☑️'
         row.title = title
         row.status = boc_template.status
-        result = cv.collection.get_rows(search=title)[0]
+        result = cv.get_rows(search=title)[0]
 
         path = "https://www.notion.so/c0j0s/" + result.title.replace("/","-") + "-" + result.id.replace("-","")
         page = self.client.get_block(path)
@@ -197,17 +189,16 @@ class NotionUtils(object):
     
     # create actual detail
     def createDetail(self,detail:Detail):
-        detail_template = self.getTemplate(self.notion_templates["detail"])
+        detail_template = self.getTemplate("detail")
 
-        cv = self.client.get_collection_view(self.notion_pages['detail_list'])
-        row = cv.collection.add_row()
+        cv = self.getTable('detail_list')
+        row = cv.add_row()
         row.icon = '🎟️'
         row.title = detail.title
         row.status = detail_template.status
         row.supporting = detail.supporting
         row.purpose = detail.purpose
-        row.poc = detail.POC
-        row.poc_contact_no = int(detail.POCContact)
+        row.poc = "[{} ({})](https://wa.me/65{})".format(detail.POC,detail.POCContact,detail.POCContact)
 
         row.assigned_vehicle = detail.veh_ref
         row.bOC_record = detail.boc_ref
@@ -217,17 +208,61 @@ class NotionUtils(object):
         # TODO: duration, reporting,destination
         row.duration = detail.getDuration()
 
-        result = cv.collection.get_rows(search=detail.title)[0]
+        result = cv.get_rows(search=detail.title)[0]
         return result
 
     def insertSignInRecord(self,result):
-        cv = self.client.get_collection_view(self.notion_pages['signin_record'])
-        row = cv.collection.add_row()
-        if int(result["status"]["code"]) == 30001:
+        cv = self.getTable('signin_record')
+        row = cv.add_row()
+        
+        if result["status"]["code"] == 0:
+            row.result = str(result["data"]["tips"])
+            row.value = int(result["data"]["bellPrize"])
+        elif result["status"]["code"] == 30001:
+            row.result = str(result["status"]["message"])
             row.value = 0
-        else:  
-            row.value = 5
 
-        row.result = result
+    def insertDetailToNotion(self,source):
+        #remove whatsapp bold
+        source = source.replace("*","") 
+        if source is "":
+            raise Exception("No source provided.")
 
-    # def updateBookReadingProgress(self,result):
+        # preprocess source, return: detail object
+        my_detail = self.preProcessDetail(source)
+        result = []
+
+        # check if veh mid record exists, else create record, return: veh mid ref
+        for detail in my_detail:
+            veh_ref = self.createVehicleMidTypeRecord(detail.mid,detail.vehType)
+            reporting_ref = self.createCampRoute(detail.resporting)
+            destination_ref_list = []
+            for item in detail.destination:
+                destination_ref_list.append(self.createCampRoute(item))
+            
+            # create boc record, return boc record ref
+            new_detail_index = self.getLatestDetailIndex()
+            boc_ref = self.createBOCRecord(new_detail_index)
+
+            # create detail
+            detail.setTitle(new_detail_index)
+            detail.setRef(veh_ref,boc_ref,reporting_ref,destination_ref_list)
+            detail_ref = self.createDetail(detail)
+            result.append(detail_ref)
+        
+        return result
+
+    def setConfig(self,config_type,key,value):
+        self.configs[config_type][key] = value
+
+    def getConfig(self,config_type,key):
+        return self.configs[config_type][key]
+
+    def getTable(self,key):
+        return self.client.get_collection_view(self.getConfig("Table",key)).collection
+
+    def getTemplate(self,key):
+        return self.client.get_block(self.getConfig("Template",key))
+
+    def getProperty(self,key):
+        return self.getConfig("Properties",key)

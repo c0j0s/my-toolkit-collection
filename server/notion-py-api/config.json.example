@@ -1,9 +1,10 @@
 {
-    "notion_pages": {
-        "page": "https://www.notion.so/..."
+    "token": "",
+    "Table":{
+        "config":""
     },
-    "notion_templates": {
-        "page": "https://www.notion.so/...",
-    },
-    "token": ""
+    "Template":{},
+    "Properties":{
+        "debug":"True"
+    }
 }
