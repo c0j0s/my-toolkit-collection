@@ -24,16 +24,16 @@ client = NotionClient(token_v2=token_v2,monitor=False)
 
 
 # create actual detail
-def createDetail(detail:Detail):
+def create_detail(detail:Detail):
     print(detail)
 
     cv = client.get_collection_view(notion_pages['detail_list'])
     row = cv.collection.add_row()
     row.title = "testing"
-    row.duration = detail.getDuration()
+    row.duration = detail.get_duration()
 
     result = cv.default_query().execute()
 
 x = Detail()
 x.buildFromSource(["24/06/20 0500hrs to 24/06/20 1030hrs"])
-createDetail(x)
+create_detail(x)

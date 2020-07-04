@@ -10,7 +10,7 @@ token_v2 = ""
 
 client = NotionClient(token_v2=token_v2,monitor=False)
 
-def getTemplate(path):
+def get_template(path):
     page = client.get_block(path)
     print(page.status)
     return page.children
@@ -34,16 +34,16 @@ def createVehicleMidRecord(mid,veh_type,template):
         if row.mid == mid:
             path = "https://www.notion.so/c0j0s/" + mid + "-" + row.id.replace("-","")
             page = client.get_block(path)
-            appendAllBlocks(page.children,template)
+            append_all_blocks(page.children,template)
             return page
 
-def appendAllBlocks(node,content):
+def append_all_blocks(node,content):
     for block in content:
         newNode = node.add_new(block.type,title=block.title)
         print(block)
 
         if len(block.children) > 0:
-            appendAllBlocks(newNode.children,block.children)
+            append_all_blocks(newNode.children,block.children)
             
 def getLatestDetailName():
     title = ""
@@ -62,7 +62,7 @@ def getDate():
     for row in cv.collection.get_rows():
         print(row.duration.)
 
-# createVehicleMidRecord("MID11302","SOUV",getTemplate(notion_templates["boc"]))
-# print(getTemplate(notion_templates["boc"]))
+# createVehicleMidRecord("MID11302","SOUV",get_template(notion_templates["boc"]))
+# print(get_template(notion_templates["boc"]))
 # print(getLatestDetailName())
 getDate()

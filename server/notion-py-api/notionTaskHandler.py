@@ -1,6 +1,6 @@
 from notion.collection import NotionDate
-from notionUtils import Detail, NotionUtils
-from dangdangUtils import DangDangUtils
+from NotionWrapper import Detail, NotionWrapper
+from DangDangUtils import DangDangUtils
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 import time
@@ -17,7 +17,7 @@ def gen_table_row_callback(record, changes):
             record.status = "Processing"
             try:
                 log("Detail generation task in progress")
-                record.result = notion.insertDetailToNotion(record.source)
+                record.result = notion.insert_detail_to_notion(record.source)
                 record.status = "Completed"
                 log("Detail generation task completed!")
             except Exception as e:
@@ -26,7 +26,7 @@ def gen_table_row_callback(record, changes):
         time.sleep(3)
 
 
-def genReportingText(veh_type, mid, avi, fe):
+def gen_reporting_text(veh_type, mid, avi, fe):
     return "1 x {} moving off from [] to []\nMID : {}\nTO : LCP JUN SHENG\nVC : []\nAVI : {}\nFE : {}\nPurpose : []".format(veh_type, mid, avi, fe)
 
 
@@ -38,7 +38,7 @@ def boc_collection_row_callback(record, changes):
                     log("Boc status passed, starting sequence...")
                     mid = record.for_detail[0].assigned_vehicle[0].mid
                     veh_type = record.for_detail[0].assigned_vehicle[0].vehicle_type_ref[0].vehicle_type
-                    record.for_detail[0].reporting_template = genReportingText(
+                    record.for_detail[0].reporting_template = gen_reporting_text(
                         veh_type, mid, record.avi, record.fe)
                     record.generate_reporting_text = True
                     log("Boc status passed, Done")
@@ -57,7 +57,7 @@ def boc_collection_row_callback(record, changes):
 
 def config_callback(record, changes):
     if changes[0][0] is "prop_changed":
-        notion.setConfig(record.group, record.name, record.value)
+        notion.set_config(record.group, record.name, record.value)
     time.sleep(3)
 
 
@@ -66,26 +66,26 @@ def init():
     config_path = "./config.json"
 
     global notion, collections
-    notion = NotionUtils(config_path, monitor=True, start_monitoring=True)
+    notion = NotionWrapper(config_path, monitor=True, start_monitoring=True)
     collections = {}
 
     log("Initialising Configs")
     count = 0
-    for row in notion.getTable("config").get_rows():
+    for row in notion.get_tabe("config").get_rows():
         if row.name is not "":
-            notion.setConfig(row.group, row.name, row.value)
+            notion.set_config(row.group, row.name, row.value)
             row.add_callback(config_callback, callback_id="config_callback")
             count += 1
 
-    collections["gen_task"] = notion.getTable("detail_gen_task")
-    collections["detail"] = notion.getTable("detail_list")
-    collections["boc"] = notion.getTable("boc_record")
-    collections["debug"] = notion.getTable("debug_log")
+    collections["gen_task"] = notion.get_tabe("detail_gen_task")
+    collections["detail"] = notion.get_tabe("detail_list")
+    collections["boc"] = notion.get_tabe("boc_record")
+    collections["debug"] = notion.get_tabe("debug_log")
     log("{} configs loaded".format(str(count)))
 
     log("Registering schedule task")
     cron = BackgroundScheduler(daemon=True)
-    cron.add_job(dangDailySignIn, 'interval', hours=24)
+    cron.add_job(dang_daily_sign_in, 'interval', hours=24)
     cron.start()
     atexit.register(lambda: cron.shutdown(wait=False))
     log("Registering schedule task completed")
@@ -109,7 +109,7 @@ def main():
         while True:
             command = str(input("Command: "))
             if command == "signin":
-                dangDailySignIn()
+                dang_daily_sign_in()
             if command == "exit":
                 raise KeyboardInterrupt()
 
@@ -121,18 +121,18 @@ def main():
         exit()
 
 
-def dangDailySignIn():
+def dang_daily_sign_in():
     log("Dang daily sign in started")
-    dangdangUtil = DangDangUtils(notion.getProperty(
-        "dang_endpoint"), notion.getProperty('dang_token'))
-    notion.insertSignInRecord(dangdangUtil.dailySignIn())
+    dangdangUtil = DangDangUtils(notion.get_property(
+        "dang_endpoint"), notion.get_property('dang_token'))
+    notion.insert_sign_in_record(dangdangUtil.dailySignIn())
     log("Dang daily sign in done")
 
 
 def log(msg):
     print("[{}][{}]: {}".format(pid, datetime.now(), str(msg)))
     try:
-        if notion.getProperty("debug").upper() == "TRUE":
+        if notion.get_property("debug").upper() == "TRUE":
             row = collections["debug"].add_row()
             row.pid = str(pid)
             row.time = NotionDate(datetime.now())

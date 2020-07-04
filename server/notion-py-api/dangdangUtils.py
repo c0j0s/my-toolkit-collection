@@ -1,6 +1,5 @@
 import requests
 
-
 class DangDangUtils(object):
     def __init__(self, endpoint: str, token: str):
         self.endpoint = endpoint

@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from notionUtils import Detail, NotionUtils
+from notionUtils import Detail, NotionWrapper
 from dangdangUtils import DangDangUtils
 import time
 import atexit
@@ -8,7 +8,7 @@ import traceback
 from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
-notionUtil = NotionUtils("./config.json")
+notionUtil = NotionWrapper("./config.json")
 dangdangUtil = DangDangUtils(notionUtil.dang['dang_endpoint'],notionUtil.dang['token'])
 
 @app.route('/')
@@ -21,7 +21,7 @@ def home():
 def getDetailTemplate(detail):
     data = {}
     msg = ""
-    detail_ref = notionUtil.checkIfRefExists(notionUtil.notion_pages['detail_list'] ,detail)
+    detail_ref = notionUtil.check_if_ref_exists(notionUtil.notion_pages['detail_list'] ,detail)
     if detail_ref is None:
         data = ""
         msg = "No Detail Found"
@@ -36,8 +36,8 @@ def getDetailTemplate(detail):
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response 
 
-@app.route('/insertDetailToNotion/', methods=['POST'])
-def insertDetailToNotion():
+@app.route('/insert_detail_to_notion/', methods=['POST'])
+def insert_detail_to_notion():
     result = {
             "status":"",
             "detail":[]
@@ -50,25 +50,25 @@ def insertDetailToNotion():
             raise Exception("No source provided.")
         
         # preprocess source, return: detail object
-        my_detail = notionUtil.preProcessDetail(source)
+        my_detail = notionUtil.pre_process_detail(source)
 
         # check if veh mid record exists, else create record, return: veh mid ref
         for detail in my_detail:
-            veh_ref = notionUtil.createVehicleMidTypeRecord(detail.mid,detail.vehType)
-            reporting_ref = notionUtil.createCampRoute(detail.resporting)
+            veh_ref = notionUtil.create_vehicle_md_type_record(detail.mid,detail.vehType)
+            reporting_ref = notionUtil.create_camp_route(detail.resporting)
             destination_ref_list = []
             for item in detail.destination:
-                destination_ref_list.append(notionUtil.createCampRoute(item))
+                destination_ref_list.append(notionUtil.create_camp_route(item))
             
 
             # create boc record, return boc record ref
-            new_detail_index = notionUtil.getLatestDetailIndex()
-            boc_ref = notionUtil.createBOCRecord(new_detail_index)
+            new_detail_index = notionUtil.get_latest_detail_index()
+            boc_ref = notionUtil.create_boc_record(new_detail_index)
 
             # create detail
-            detail.setTitle(new_detail_index)
-            detail.setRef(veh_ref,boc_ref,reporting_ref,destination_ref_list)
-            detail_ref = notionUtil.createDetail(detail)
+            detail.set_title(new_detail_index)
+            detail.set_ref(veh_ref,boc_ref,reporting_ref,destination_ref_list)
+            detail_ref = notionUtil.create_detail(detail)
             result["detail"].append([detail_ref.id,detail_ref.title])
         
         result["status"] = "Success"
@@ -83,7 +83,7 @@ def insertDetailToNotion():
 
 @app.route('/dailySignIn/')
 def dailySignIn():
-    notionUtil.insertSignInRecord(dangdangUtil.dailySignIn())
+    notionUtil.insert_sign_in_record(dangdangUtil.dailySignIn())
     return "Done"
 
 cron = BackgroundScheduler(daemon=True)

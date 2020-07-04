@@ -29,11 +29,11 @@ class Detail(object):
                 if len(self.mid) == 0:
                     self.mid = re.findall(r"(?<=JUN SHENG \()(MID[0-9]{5})(?=\))",line)[0]
                 
-    def toJSON(self):
+    def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__, 
             sort_keys=True, indent=4)
 
-def preProcessDetail(rawInput):
+def pre_process_detail(rawInput):
     myDetail = []
     
     source = rawInput.split("\n")
@@ -207,8 +207,8 @@ Destination SAFTI 300M RANGE
 POC: 2WO LIN ZHIXIANG VICTOR (81895015)
 """
 
-ds = preProcessDetail(x)
+ds = pre_process_detail(x)
 for item in ds:
     x = Detail()
     x.buildFromSource(item)
-    print(x.toJSON())
+    print(x.to_json())
