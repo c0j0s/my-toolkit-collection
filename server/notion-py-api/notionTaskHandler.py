@@ -16,6 +16,7 @@ def gen_table_row_callback(record, changes):
             log("Detail generation task starting: " + record.title)
             record.status = "Processing"
             try:
+                log("Detail generation task in progress")
                 record.result = notion.insertDetailToNotion(record.source)
                 record.status = "Completed"
                 log("Detail generation task completed!")
@@ -43,9 +44,11 @@ def boc_collection_row_callback(record, changes):
             else:
                 if record.status == "Pass" and record.avi is "" and record.fe is  "":
                     record.status = "Not Started"
+                    log("Boc status invalid action")
         else:
             if record.generate_reporting_text:
                 record.generate_reporting_text = False
+                log("Boc status invalid action")
         time.sleep(3)
 
 def config_callback(record, changes):
@@ -54,8 +57,11 @@ def config_callback(record, changes):
     time.sleep(3)
 
 def init():
+    # config_path = "/home/opc/notion-py-api/config.json"
+    config_path = "./config.json"
+
     global notion, collections
-    notion = NotionUtils("./config.json",monitor=True,start_monitoring=True)
+    notion = NotionUtils(config_path,monitor=True,start_monitoring=True)
     collections = {}
 
     log("Initialising Configs")
