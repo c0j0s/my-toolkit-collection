@@ -5,19 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "chrome",
-            "request": "launch",
-            "name": "Launch WebApp",
-            "url": "http://localhost:4200",
-            "webRoot": "${workspaceFolder}/webapp"
-        },
-
-        {
-            "name": "Python: Notion Api Flask Server",
+            "name": "Python: Current File",
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "cwd": "server/notion-py-api/",
             "console": "integratedTerminal"
         }
     ]
