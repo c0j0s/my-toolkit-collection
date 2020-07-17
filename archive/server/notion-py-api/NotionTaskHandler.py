@@ -60,8 +60,8 @@ def config_callback(record, changes):
 
 
 def init():
-    # config_path = "/home/opc/notion-py-api/config.json"
-    config_path = "./config.json"
+    config_path = "/home/opc/notion-py-api/config.json"
+    # config_path = "./config.json"
 
     global notion, collections
     notion = NotionWrapper(config_path, monitor=True, start_monitoring=True)
@@ -83,7 +83,7 @@ def init():
 
     log("Registering schedule task")
     cron = BackgroundScheduler(daemon=True)
-    cron.add_job(dang_daily_sign_in, 'interval', hours=24)
+    cron.add_job(dang_daily_sign_in, 'cron', hour=1)
     cron.start()
     atexit.register(lambda: cron.shutdown(wait=False))
     log("Registering schedule task completed")
@@ -124,7 +124,7 @@ def dang_daily_sign_in():
     dangdangUtil = DangDangUtils(notion.get_property(
         "dang_endpoint"), notion.get_property('dang_token'))
     notion.insert_sign_in_record(dangdangUtil.daily_sign_in())
-    log("Dang daily sign in done")
+    log("Dang daily sign in sequence completed")
 
 
 def log(msg):

@@ -1,9 +1,10 @@
 from notion.client import NotionClient
 from notion.collection import NotionDate
+from task_handler import TaskHandler
 import json
 import re
 from datetime import datetime
-
+import sys
 
 class Detail:
     def set_title(self, next_index):
@@ -80,12 +81,11 @@ class Detail:
 
         return NotionDate(duration_start, duration_end)
 
+class DetailUtils:
 
-class NotionWrapper:
-
-    def __init__(self, config_file_path, **kwargs):
-        self.configs = json.load(open(config_file_path))
-        self.client = NotionClient(token_v2=self.configs["token"], **kwargs)
+    def __init__(self, configs):
+        self.configs = configs
+        self.client = NotionClient(token_v2=self.configs["token"],monitor=True, start_monitoring=True)
 
     def pre_process_detail(self, rawInput):
         myDetail = []
@@ -218,22 +218,10 @@ class NotionWrapper:
         result = cv.get_rows(search=detail.title)[0]
         return result
 
-    def insert_sign_in_record(self, result):
-        cv = self.get_table('signin_record')
-        row = cv.add_row()
-
-        if result["status"]["code"] == 0:
-            row.result = str(result["data"]["tips"])
-            row.value = int(result["data"]["bellPrize"])
-        elif result["status"]["code"] == 30001:
-            row.result = str(result["status"]["message"])
-            row.value = 0
-
     def insert_detail_to_notion(self, source):
         # remove whatsapp bold
         source = source.replace("*", "")
-        if source == "":
-            raise Exception("No source provided.")
+        assert source != "", "No source provided."
 
         # preprocess source, return: detail object
         my_detail = self.pre_process_detail(source)
@@ -260,17 +248,108 @@ class NotionWrapper:
 
         return result
 
-    def set_config(self, config_type, key, value):
-        self.configs[config_type][key] = value
+    def set_config(self, key, value):
+        self.configs[key] = value
 
-    def get_config(self, config_type, key):
-        return self.configs[config_type][key]
+    def get_config(self, key):
+        return self.configs[key]
 
     def get_table(self, key):
-        return self.client.get_collection_view(self.get_config("Table", key)).collection
+        return self.client.get_collection_view(self.get_config(key)).collection
 
     def get_template(self, key):
-        return self.client.get_block(self.get_config("Template", key))
+        return self.client.get_block(self.get_config(key))
 
-    def get_property(self, key):
-        return self.get_config("Properties", key)
+
+def gen_table_row_callback(record, changes):
+    handler.debug(changes)
+    if changes[0][0] == "prop_changed":
+        start = record.start_task
+        record.start_task = False
+        if start and record.source != "" and record.status == "Not Started":
+            handler.print("Detail generation task starting: " + record.title)
+            record.status = "Processing"
+            try:
+                handler.print("Detail generation task in progress")
+                record.result = notion.insert_detail_to_notion(record.source)
+                record.status = "Completed"
+                handler.print("Detail generation task completed!")
+            except Exception as e:
+                record.status = "Error"
+                handler.errer("Detail generation task error: " + str(e))
+        time.sleep(10)
+
+def gen_reporting_text(veh_type, mid, avi, fe):
+    return "1 x {} moving off from [] to []\nMID : {}\nTO : LCP JUN SHENG\nVC : []\nAVI : {}\nFE : {}\nPurpose : []".format(veh_type, mid, avi, fe)
+
+def boc_collection_row_callback(record, changes):
+    if changes[0][0] == "prop_changed":
+        if record.status != "Not Started" and record.status != "Cancelled":
+            if record.avi != "" and record.fe != "" and not record.generate_reporting_text and record.done_on == None:
+                if record.status == "Pass":
+                    handler.print("Boc status passed, starting sequence...")
+                    mid = record.for_detail[0].assigned_vehicle[0].mid
+                    veh_type = record.for_detail[0].assigned_vehicle[0].vehicle_type_ref[0].vehicle_type
+                    record.for_detail[0].reporting_template = gen_reporting_text(
+                        veh_type, mid, record.avi, record.fe)
+                    record.generate_reporting_text = True
+                    handler.print("Boc status passed, Done")
+
+                record.done_on = NotionDate(datetime.now())
+            else:
+                if record.status == "Pass" and record.avi == "" and record.fe == "":
+                    record.status = "Not Started"
+                    handler.print("Boc status invalid action")
+        else:
+            if record.generate_reporting_text:
+                record.generate_reporting_text = False
+                handler.print("Boc status invalid action")
+        time.sleep(10)
+
+def main():
+    try:
+        handler.print("Detail Task Handler Started")
+
+        handler.print("Registering detail generation task table row callbacks")
+        for row in collections["gen_task"].get_rows():
+            row.add_callback(gen_table_row_callback,
+                             callback_id="gen_table_row_callback")
+
+        handler.print("Registering boc table row callbacks")
+        for row in collections["boc"].get_rows():
+            row.add_callback(boc_collection_row_callback,
+                             callback_id="boc_collection_row_callback")
+
+        handler.print("Ready and listening!")
+        while True:
+            pass
+
+    except Exception as e:
+        handler.error(e)
+    except KeyboardInterrupt as e:
+        exit()
+
+
+def init():
+    global handler, notion, collections
+    handler = TaskHandler(sys.argv[1])
+    handler.configs["detail_local_config"] = "https://www.notion.so/c0j0s/c0e922bee4fe47b3a4a375f75f0d1fb1?v=900566261aa748918638c9a4e0a4d113"
+    notion = DetailUtils(handler.configs)
+    
+    handler.print("Loading detail local configs")
+    for row in notion.get_table("detail_local_config").get_rows():
+        if row.name != "":
+            notion.set_config(row.name, row.value)
+
+    handler.print("Loading collections")
+    collections = {}
+    collections["gen_task"] = notion.get_table("detail_gen_task")
+    collections["detail"] = notion.get_table("detail_list")
+    collections["boc"] = notion.get_table("boc_record")
+
+if __name__ == "__main__":
+    init()
+    main()
+
+#Second Code Block
+
