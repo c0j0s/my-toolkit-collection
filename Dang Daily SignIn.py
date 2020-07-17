@@ -42,6 +42,3 @@ atexit.register(lambda: cron.shutdown(wait=False))
 
 while True:
 	pass
-
-#Second Code Block
-

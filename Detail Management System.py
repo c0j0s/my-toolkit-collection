@@ -1,10 +1,13 @@
 from notion.client import NotionClient
 from notion.collection import NotionDate
+from notion.collection import CollectionRowBlock
 from task_handler import TaskHandler
 import json
 import re
 from datetime import datetime
 import sys
+import time
+import traceback
 
 class Detail:
     def set_title(self, next_index):
@@ -56,8 +59,7 @@ class Detail:
                         r"(?<=JUN SHENG \()(MID.?[0-9]{5})(?=\))", line)
 
                 # check again
-                if len(mid) == 0:
-                    raise Exception("Detail Mid Number Error")
+                assert len(mid) != 0, "Detail Mid Number Error"
 
                 self.mid = mid[0]
                 self.mid = self.mid.replace("MID", "")
@@ -67,11 +69,9 @@ class Detail:
                           sort_keys=True, indent=4)
 
     def get_duration(self):
-        if self.end_date == "":
-            raise Exception("End date is not set")
+        assert self.end_date != "","End date is not set"
 
-        if self.start_time =="" or self.end_time == "":
-            raise Exception("Start or end time is not set")
+        assert self.start_time !="" or self.end_time != "", "Start or end time is not set"
 
         date_format = '%d/%m/%y %H%M'
         start_datetime = self.start_date + " " + self.start_time
@@ -85,7 +85,7 @@ class DetailUtils:
 
     def __init__(self, configs):
         self.configs = configs
-        self.client = NotionClient(token_v2=self.configs["token"],monitor=True, start_monitoring=True)
+        self.client = NotionClient(token_v2=self.configs["token"], monitor=True, start_monitoring=True)
 
     def pre_process_detail(self, rawInput):
         myDetail = []
@@ -116,6 +116,7 @@ class DetailUtils:
 
     def check_if_ref_exists(self, table, keyword):
         result = self.get_table(table).get_rows(search=keyword)
+        
         if len(result) > 0:
             return result[0]
         else:
@@ -125,28 +126,26 @@ class DetailUtils:
     def create_vehicle_md_type_record(self, mid, veh_type):
         # check if vehicle record exists
         veh_ref = self.check_if_ref_exists('veh_type_mid', mid)
-        if veh_ref != None:
+        if veh_ref is not None and type(veh_ref) == CollectionRowBlock:
             return veh_ref
 
         # check if vehicle type is valid
         veh_type_ref = self.check_if_ref_exists('veh_types', veh_type)
+        assert veh_type_ref is not None, "Unknown Vehicle Type"
+        
+        cv = self.get_table('veh_type_mid')
+        row = cv.add_row()
+        row.icon = '🚙'
+        row.mid = mid
+        row.vehicle_type_ref = veh_type_ref
 
-        if veh_type_ref == None:
-            raise Exception("Unknown Vehicle Type")
-        else:
-            cv = self.get_table('veh_type_mid')
-            row = cv.add_row()
-            row.icon = '🚙'
-            row.mid = mid
-            row.vehicle_type_ref = veh_type_ref
-
-            veh_ref = cv.get_rows(search=mid)[0]
+        veh_ref = cv.get_rows(search=mid)[0]
 
         return veh_ref
 
     def create_camp_route(self, aka):
         camp_ref = self.check_if_ref_exists('camp_route', aka)
-        if camp_ref != None:
+        if camp_ref is not None:
             return camp_ref
 
         cv = self.get_table('camp_route')
@@ -229,8 +228,7 @@ class DetailUtils:
 
         # check if veh mid record exists, else create record, return: veh mid ref
         for detail in my_detail:
-            veh_ref = self.create_vehicle_md_type_record(
-                detail.mid, detail.veh_type)
+            veh_ref = self.create_vehicle_md_type_record(detail.mid, detail.veh_type)
             reporting_ref = self.create_camp_route(detail.resporting)
             destination_ref_list = []
             for item in detail.destination:
@@ -262,7 +260,6 @@ class DetailUtils:
 
 
 def gen_table_row_callback(record, changes):
-    handler.debug(changes)
     if changes[0][0] == "prop_changed":
         start = record.start_task
         record.start_task = False
@@ -276,7 +273,7 @@ def gen_table_row_callback(record, changes):
                 handler.print("Detail generation task completed!")
             except Exception as e:
                 record.status = "Error"
-                handler.errer("Detail generation task error: " + str(e))
+                handler.error(traceback.format_exc())
         time.sleep(10)
 
 def gen_reporting_text(veh_type, mid, avi, fe):
@@ -285,7 +282,7 @@ def gen_reporting_text(veh_type, mid, avi, fe):
 def boc_collection_row_callback(record, changes):
     if changes[0][0] == "prop_changed":
         if record.status != "Not Started" and record.status != "Cancelled":
-            if record.avi != "" and record.fe != "" and not record.generate_reporting_text and record.done_on == None:
+            if record.avi != "" and record.fe != "" and not record.generate_reporting_text and record.done_on is None:
                 if record.status == "Pass":
                     handler.print("Boc status passed, starting sequence...")
                     mid = record.for_detail[0].assigned_vehicle[0].mid
@@ -325,7 +322,7 @@ def main():
             pass
 
     except Exception as e:
-        handler.error(e)
+        handler.error(traceback.format_exc())
     except KeyboardInterrupt as e:
         exit()
 
@@ -350,6 +347,3 @@ def init():
 if __name__ == "__main__":
     init()
     main()
-
-#Second Code Block
-
