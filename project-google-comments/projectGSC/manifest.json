@@ -1,0 +1,42 @@
+{
+  "name": "GSComments",
+  "version": "0.0.0.1",
+  "description": "Comments for google searchers",
+  "permissions": ["activeTab", "declarativeContent", "identity","storage"],
+  "options_page": "options.html",
+  "background": {
+    "page": "background.html",
+    "persistent": true
+  },
+  "browser_action": {
+    "default_popup": "credentials.html"
+  },
+  "icons": {
+    "16": "images/get_started16.png",
+    "32": "images/get_started32.png",
+    "48": "images/get_started48.png",
+    "128": "images/get_started128.png"
+  },
+  "content_scripts": 
+	[
+		{
+			"matches": ["https://*.google.com/search*"], 
+      "js": ["gsc.js"],
+      "css": ["css/main.css"],
+			"run_at": "document_end"
+		}
+  ],
+  "content_security_policy":"script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://www.googleapis.com; object-src 'self'",
+  "oauth2": {
+    "client_id": "780329099121-vppevh398so5it07ng8094uav87s681r.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
+  },
+  "key":"-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlOo6prmr23T0idmrsnLka5sjtAS7gyA7DlKtGagXXOkpdigDQRC6SRTQi0COc0ZZzr9FnxsskTqYX6gTkuD/fU7slhWZjrh39DxrD52E+e6c3IqdVJ51ENshVdMvRA5zZtQJ2X7l4PFQFDr4IDORxDUtWQWeFQfZ96vWtMhQ7akAe8XeDqt3VSLuPZ8K8fkRyRsFPY8qL7MZLx2g3LmU8kXnOV63ZQ600kkzozIL3/TPk6hbOfztuS2QXnbScCZ2lYwN2TXShxOUzAvU0LdWEIN6evGj2m+swvMzk7+4yJPqF0ihSzgtC/xzrGcLBXUmKJRMSVdeaMtgHnpdAK1YgQIDAQAB-----END PUBLIC KEY-----",
+  "manifest_version": 2,
+  "web_accessible_resources": [
+    "images/*.png"
+  ]
+}

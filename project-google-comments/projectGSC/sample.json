@@ -1,0 +1,17 @@
+{
+    "google":{
+        "taobao.com":{
+            "comments":{
+                "google-Id":{
+                    "content":"good deals",
+                    "vote":0,
+                    "createdOn":"",
+                    "deleted":false,
+                    "user":"google-id",
+                    "lang":"en",
+                    "country":""
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,67 @@
+.gsc-container {
+    margin-top: 1em;
+}
+.gsc-container > .gsc-toggle-button {
+    margin-bottom: 0.5em;
+}
+
+.gsc-toggle-button{
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    border-radius: 1em;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 2px 2px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
+}
+.gsc-toggle-button-down-arrow{
+    border-color: #909090 transparent;
+    border-style: solid;
+    border-width: 5px 4px 0 4px;
+    margin: 0.5em;
+}
+
+/* Comment styling */
+.gsc-container-comment{
+    padding-bottom: 0.5em;
+    padding-top: 0.5em;
+}
+.gsc-comment-item{
+    display: flex;
+    align-items:center;
+    margin-bottom: 0.5em;
+}
+.gsc-comment-item-userImg{
+    height: 16px;
+    width: auto;
+    border-radius: 50%;
+    padding: 0.5em;
+}
+.gsc-comment-item-userName{
+    padding: 0.2em;
+}
+.gsc-comment-item-content{
+    padding: 0.5em;
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.08);
+    border: none;
+    border-radius: 2px;
+}
+
+/* Button Styling */
+.gsc-container-button{
+    
+}
+.gsc-container-button > input{
+    width: 50%;
+    border-radius: 2em;
+    text-indent: 1em;
+    margin-right: 0.5em;
+    border: 1px solid #bababa8f;
+    outline: none;
+    height: 1.8em;
+}
+.gsc-add-comment-btn{
+    padding: 0.5em;
+    padding-left: 1em;
+    padding-right: 1em;
+    border-radius: 2em;
+    outline: none;
+}
