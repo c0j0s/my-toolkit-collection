@@ -1,4 +1,4 @@
-from flask import Flask, redirect, session
+from flask import Flask, redirect, session, request
 import json
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -10,10 +10,22 @@ import sys
 
 handler = TaskHandler(sys.argv[1])
 app = Flask(__name__)
+chrome_driver = None
+chrome_engine = ChromeDriverManager().install()
+
+chrome_options = Options()
+chrome_options.add_argument('--headless')
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-dev-shm-usage')
+chrome_options.add_argument(
+    '--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1')
+
+caps = DesiredCapabilities.CHROME
+caps['goog:loggingPrefs'] = {'performance': 'ALL'}
 
 configs = [
     {
-        "host": "http://news.tvb.com/live/inews?is_hd",
+        "host": "http://m.iptv345.com/?act=play&tid=gt&id=9",
         "filters": [
             {
                 "method": "Network.requestWillBeSent",
@@ -38,17 +50,17 @@ configs = [
         ]
     },
     {
-        "host": "http://news.tvb.com/live/inews?is_hd",
+        "host": "http://news.tvb.com/live/j5_ch85?is_hd",
         "filters": [
             {
                 "method": "Network.requestWillBeSent",
                 "type": "request",
-                "search": "http://wowza-live.edge-global.akamai.tvb.com/newslive/"
+                "search": "http://wowza-live.edge-global.akamai.tvb.com/newslive/smil:mobilehd_finance.smil/playlist.m3u8"
             },
             {
                 "method": "Network.responseReceived",
                 "type": "response",
-                "search": "http://wowza-live.edge-global.akamai.tvb.com/newslive/"
+                "search": "http://wowza-live.edge-global.akamai.tvb.com/newslive/smil:mobilehd_finance.smil/playlist.m3u8"
             }
         ]
     }
@@ -56,32 +68,23 @@ configs = [
 
 
 def initDriver():
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument(
-        '--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1')
-
-    caps = DesiredCapabilities.CHROME
-    caps['goog:loggingPrefs'] = {'performance': 'ALL'}
-
-    driver = webdriver.Chrome(ChromeDriverManager().install(
-    ), options=chrome_options, desired_capabilities=caps)
-    return driver
+    if chrome_driver is None:
+        return webdriver.Chrome(chrome_engine, options=chrome_options, desired_capabilities=caps)
+    else:
+        return chrome_driver
 
 
-def getLogs(webdriver, url):
-    with webdriver as driver:
-        try:
+def getLogs(driver, url):
+    try:
+        if driver is not None:
             driver.get(url)
             browser_log = driver.get_log('performance')
             events = [process_browser_log_entry(
                 entry) for entry in browser_log]
             driver.close()
             return events
-        except Exception as e:
-            handler.error("[Exception] getLogs:" + str(e))
+    except Exception as e:
+        handler.error("[Exception] getLogs:" + str(e))
 
 
 def process_browser_log_entry(entry):
@@ -98,10 +101,8 @@ def filter_log(events, channel):
         return None
 
 
-@app.route('/<int:stream_id>')
+@app.route('/<int:stream_id>.m3u8')
 def stream(stream_id):
-    webdriver = initDriver()
-
     start_time = time.time()
     if(stream_id > len(configs) - 1):
         return "No stream found"
@@ -109,10 +110,10 @@ def stream(stream_id):
     stream_session = str(stream_id)
 
     if session.get(stream_session) is None:
-
+        chrome_driver = initDriver()
         ori_url = configs[stream_id]["host"]
         handler.print("[/stream " + stream_session + "] fetching: " + ori_url)
-        events = getLogs(webdriver, ori_url)
+        events = getLogs(chrome_driver, ori_url)
 
         for channel in configs[stream_id]["filters"]:
             result = filter_log(events, channel)
@@ -134,6 +135,11 @@ def delete_session():
     session.clear()
     handler.print("[/delete-session] return: Session deleted")
     return 'Session deleted'
+
+@app.errorhandler(404)
+def http_error_handler(error):
+    handler.warn("[{}] -> [{}]".format(request.remote_addr, request.url))
+    return "404", 404
 
 if __name__ == '__main__':
     app.secret_key = 'stream'

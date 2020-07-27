@@ -11,7 +11,7 @@ handler.configs["ippt_table"] = "https://www.notion.so/c0j0s/f742b24ad09046f68b3
 client = NotionClient(token_v2=handler.configs["token"], monitor=True, start_monitoring=True)
 
 def ippt_row_callback(record, changes):
-    if changes[0][0] == "prop_changed":
+    if changes[0][0] == "prop_changed" and str(changes[0][2][1]) == "True":
         start = record.calculate
         record.calculate = False
         if start and record.running == "":
@@ -26,9 +26,9 @@ def ippt_row_callback(record, changes):
                 record.running_time == 20
 
             estimated_2_4 = 2400 / ((record.running_distance * 1000)/(record.running_time * 60))
-            runMins = int(estimated_2_4 // 60 % 60)
-            runSecs = math.ceil((estimated_2_4 - runMins * 60))
-            record.running = "{:02d}:{:02d}".format(runMins, runSecs)
+            runMins = estimated_2_4 / 60
+            runSecs = (runMins - math.floor(runMins)) * 100
+            record.running = "{:02d}:{:02d}".format(int(runMins), int(runSecs))
         time.sleep(sleep)
 
 def ippt_table_callback(record, difference, changes):
