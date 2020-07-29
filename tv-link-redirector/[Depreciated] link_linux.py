@@ -103,32 +103,34 @@ def filter_log(events, channel):
 
 @app.route('/<int:stream_id>.m3u8')
 def stream(stream_id):
-    start_time = time.time()
-    if(stream_id > len(configs) - 1):
-        return "No stream found"
+    try:
+        start_time = time.time()
+        if(stream_id > len(configs) - 1):
+            return "No stream found"
 
-    stream_session = str(stream_id)
+        stream_session = str(stream_id)
 
-    if session.get(stream_session) is None:
-        chrome_driver = initDriver()
-        ori_url = configs[stream_id]["host"]
-        print("[/stream " + stream_session + "] fetching: " + ori_url)
-        events = getLogs(chrome_driver, ori_url)
+        if session.get(stream_session) is None:
+            chrome_driver = initDriver()
+            ori_url = configs[stream_id]["host"]
+            print("[/stream " + stream_session + "] fetching: " + ori_url)
+            events = getLogs(chrome_driver, ori_url)
 
-        for channel in configs[stream_id]["filters"]:
-            result = filter_log(events, channel)
-            if result is not None:
-                session[stream_session] = result
-                break
-            else:
-                print("Channel not found")
-                session[stream_session] = "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8"
+            for channel in configs[stream_id]["filters"]:
+                result = filter_log(events, channel)
+                if result is not None:
+                    session[stream_session] = result
+                    break
+                else:
+                    print("Channel not found")
+                    session[stream_session] = "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8"
 
-    print("E --- %s seconds ---" % (time.time() - start_time))
-    print("[/stream " + stream_session + "] return: " +
-                  session.get(stream_session))
-    return redirect(session.get(stream_session))
-
+        print("E --- %s seconds ---" % (time.time() - start_time))
+        print("[/stream " + stream_session + "] return: " +
+                    session.get(stream_session))
+        return redirect(session.get(stream_session))
+    except Exception as e:
+        print("[Exception] stream:" + str(e))
 
 @app.route('/delete-session')
 def delete_session():
@@ -145,5 +147,5 @@ if __name__ == '__main__':
     app.secret_key = 'stream'
     app.config['SESSION_TYPE'] = 'filesystem'
     app.debug = False
-    app.run(host='127.0.0.1', port=5000)
-    # app.run(host='0.0.0.0', port=80)
+    # app.run(host='127.0.0.1', port=5000)
+    app.run(host='0.0.0.0', port=80)
