@@ -9,6 +9,8 @@ import sys
 import time
 import traceback
 
+sleep = 2
+
 class Detail:
     def set_title(self, next_index):
         self.title = "Detail " + str(next_index)
@@ -252,8 +254,11 @@ class DetailUtils:
     def get_config(self, key):
         return self.configs[key]
 
+    def get_table_ref(self, key):
+        return self.client.get_collection_view(self.get_config(key))
+
     def get_table(self, key):
-        return self.client.get_collection_view(self.get_config(key)).collection
+        return self.get_table_ref(key).collection
 
     def get_template(self, key):
         return self.client.get_block(self.get_config(key))
@@ -274,13 +279,13 @@ def gen_table_row_callback(record, changes):
             except Exception as e:
                 record.status = "Error"
                 handler.error(traceback.format_exc())
-        time.sleep(10)
+        time.sleep(sleep)
 
 def gen_reporting_text(veh_type, mid, avi, fe):
     return "1 x {} moving off from [] to []\nMID : {}\nTO : LCP JUN SHENG\nVC : []\nAVI : {}\nFE : {}\nPurpose : []".format(veh_type, mid, avi, fe)
 
 def boc_collection_row_callback(record, changes):
-    if changes[0][0] == "prop_changed":
+    if changes[0][0] == "prop_changed" and str(changes[0][2][1]) == "True":
         if record.status != "Not Started" and record.status != "Cancelled":
             if record.avi != "" and record.fe != "" and not record.generate_reporting_text and record.done_on is None:
                 if record.status == "Pass":
@@ -301,7 +306,7 @@ def boc_collection_row_callback(record, changes):
             if record.generate_reporting_text:
                 record.generate_reporting_text = False
                 handler.print("Boc status invalid action")
-        time.sleep(10)
+        time.sleep(sleep)
 
 def main():
     try:
