@@ -8,6 +8,7 @@ import json
 import time
 import sys
 import atexit
+import threading
 
 
 # from task_handler import TaskHandler
@@ -26,7 +27,7 @@ chrome_options.add_argument(
 caps = DesiredCapabilities.CHROME
 caps['goog:loggingPrefs'] = {'performance': 'ALL'}
 
-locale = "global"
+locale = "sg"#"global"
 
 configs = [
     {
@@ -84,14 +85,14 @@ configs = [
 def stream(stream_id:int):
     try:
         channel = configs[stream_id]
-        if channel["redirect"] == "":
-            channel["redirect"] = get_stream_link(channel)
+        if channel["redirect"] is None and chrome_driver is not None:
+            update_stream(stream_id)
 
         print("[/{}.m3u8 -> {}".format(str(stream_id),channel["redirect"]))
         return redirect(channel["redirect"])
     except Exception as e:
         print(str(e))
-        return "404", 404 
+        return redirect("https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8"), 200 
 
 @app.route('/update')
 def update():
@@ -121,36 +122,39 @@ def get_stream_link(channel):
         browser_log = chrome_driver.get_log('performance')
         events = [process_browser_log_entry(entry) for entry in browser_log]
         
-        
-        result = ""
+        result = None
         for stream in channel["filters"]:
             result = filter_log(events, stream)
             if result is not None:
                 return result
-            else:
-                result = "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8"
-
         return result
     except Exception as e:
         print("[Exception] getLogs:" + str(e))
 
-def update_stream():
+def update_stream(stream_id:int = -1):
+    global chrome_driver
     chrome_driver = webdriver.Chrome(chrome_engine, options=chrome_options, desired_capabilities=caps)
-    for idx, channel in enumerate(configs):
-        print("Updating stream index: {}".format(idx))
-        configs[idx]["redirect"] = get_stream_link(channel)
+    if stream_id == -1:
+        for idx, channel in enumerate(configs):
+            print("Updating stream index: {}".format(idx))
+            configs[idx]["redirect"] = get_stream_link(channel)
+    else:
+        if stream_id < len(configs):
+            configs[stream_id]["redirect"] = get_stream_link(configs[stream_id])
+        else:
+            print("Stream id invalid.")          
     chrome_driver.close()
 
 def main():
-    update_stream()
+    threading.Thread(target=update_stream).start()
+
+# Register task
+cron = BackgroundScheduler(daemon=True)
+cron.add_job(update_stream, 'interval', minutes=5)
+cron.start()
+atexit.register(lambda: cron.shutdown(wait=False))
 
 if __name__ == "__main__":
-    # Register task
-    cron = BackgroundScheduler(daemon=True)
-    cron.add_job(update_stream, 'cron', hour=15)
-    cron.start()
-    atexit.register(lambda: cron.shutdown(wait=False))
-    
     # initialise channel
     main()
 
