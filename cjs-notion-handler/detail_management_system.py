@@ -21,50 +21,59 @@ class Detail:
         self.reporting_ref = reporting_ref
         self.destination_ref = destination_ref
 
-    def build_from_raw(self, arr):
+    def build_from_raw(self, arr, debug=False):
         for line in arr:
-            if line.startswith("Supporting"):
-                self.supporting = re.findall(
-                    r"(?<=:.)(.*)(?=.for)", line)[0].replace(r"\s", '').replace("\r", "")
-                self.purpose = re.findall(
-                    r"(?<=for.)(.*)(?=)", line)[0].replace("\r", "")
-            elif line.startswith("Reporting"):
-                self.resporting = line.split(": ")[1].replace("\r", "")
-            elif line.startswith("Destination"):
-                self.destination = []
+            try:
+                if line.startswith("Supporting"):
+                    if "for" in line:
+                        self.supporting = re.findall(
+                            r"(?<=:.)(.*)(?=.for)", line)[0].replace(r"\s", '').replace("\r", "")
+                        self.purpose = re.findall(
+                            r"(?<=for.)(.*)(?=)", line)[0].replace("\r", "")
+                    else:
+                        s = line.replace("Supporting: ","").split(" ")
+                        self.supporting = s[0]
+                        self.purpose = " ".join(s[1:])
+                elif line.startswith("Reporting"):
+                    self.resporting = line.split(": ")[1].replace("\r", "")
+                elif line.startswith("Destination"):
+                    self.destination = []
 
-                dest_raw = line.split(": ")[1].replace("\r", "")
-                if "-" in dest_raw:
-                    self.destination = dest_raw.split("-")
-                else:
-                    self.destination.append(dest_raw)
+                    dest_raw = line.split(": ")[1].replace("\r", "")
+                    if "-" in dest_raw:
+                        self.destination = dest_raw.split("-")
+                    else:
+                        self.destination.append(dest_raw)
 
-            elif line.startswith("POC"):
-                self.poc = re.findall(r"(?<=: )(.*)(?= \([0-9])", line)[0]
-                self.poc_contact = re.findall(r"[0-9]{8}", line)[0]
-            elif re.findall(r"..\/..\/..", line):
-                dates, hrs = ["", ""]
+                elif line.startswith("POC"):
+                    self.poc = re.findall(r"(?<=: )(.*)(?=\s?\([0-9])", line)[0]
+                    self.poc_contact = re.findall(r"[0-9]{8}", line)[0]
+                elif re.findall(r"..\/..\/..", line):
+                    dates, hrs = ["", ""]
 
-                dates = re.findall(r"..\/..\/..", line)
-                hrs = re.findall(r"[0-9]{4}(?=hrs)", line)
-                self.start_date = dates[0]
-                self.start_time = hrs[0]
-                self.end_date = dates[1]
-                self.end_time = hrs[1]
-            elif re.findall(r"(?=JUN.?SHENG \()(.*)(?=\))", line):
-                self.veh_type = re.findall(
-                    r"(?<=x )(.*)(?=:)", line)[0].upper()
-                mid = re.findall(
-                    r"(?<=JUNSHENG \()(MID.?[0-9]{5})(?=\))", line)
-                if len(mid) == 0:
+                    dates = re.findall(r"..\/..\/..", line)
+                    hrs = re.findall(r"[0-9]{4}(?=hrs)", line)
+                    self.start_date = dates[0]
+                    self.start_time = hrs[0]
+                    self.end_date = dates[1]
+                    self.end_time = hrs[1]
+                elif re.findall(r"(?=JUN.?SHENG \()(.*)(?=\))", line):
+                    self.veh_type = re.findall(
+                        r"(?<=x )(.*)(?=:)", line)[0].upper()
                     mid = re.findall(
-                        r"(?<=JUN SHENG \()(MID.?[0-9]{5})(?=\))", line)
+                        r"(?<=JUNSHENG \()(MID.?[0-9]{5})(?=\))", line)
+                    if len(mid) == 0:
+                        mid = re.findall(
+                            r"(?<=JUN SHENG \()(MID.?[0-9]{5})(?=\))", line)
 
-                # check again
-                assert len(mid) != 0, "Detail Mid Number Error"
+                    # check again
+                    assert len(mid) != 0, "Detail Mid Number Error"
 
-                self.mid = mid[0]
-                self.mid = self.mid.replace("MID", "")
+                    self.mid = mid[0]
+                    self.mid = self.mid.replace("MID", "")
+                    
+            except Exception as e:
+                print("{}:{}".format(e,line))
 
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__,
@@ -82,7 +91,7 @@ class Detail:
         duration_end = datetime.strptime(end_datetime, date_format)
 
         return NotionDate(duration_start, duration_end)
-
+        
 class DetailUtils:
 
     def __init__(self, configs):

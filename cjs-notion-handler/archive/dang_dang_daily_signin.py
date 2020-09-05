@@ -1,3 +1,11 @@
+"""
+This is a script service that auto sign in everyday to dangdang everyday for silver coins.
+Abandon as silver coins is only valid for 7 days by nature.
+
+Author: COJOS
+"""
+
+
 from notion.client import NotionClient
 from task_handler import TaskHandler
 import requests

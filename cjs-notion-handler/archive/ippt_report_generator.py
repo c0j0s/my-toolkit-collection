@@ -1,3 +1,10 @@
+"""
+This is a simple script for calucalting 2.4km running time based on each running session.
+It is made obsolete as of 05/09/2020, replaced by table formula instead.
+
+Author: COJOS
+"""
+
 from notion.client import NotionClient
 from task_handler import TaskHandler
 import time
@@ -26,8 +33,8 @@ def ippt_row_callback(record, changes):
                 record.running_time == 20
 
             estimated_2_4 = 2400 / ((record.running_distance * 1000)/(record.running_time * 60))
-            runMins = estimated_2_4 / 60
-            runSecs = (runMins - math.floor(runMins)) * 100
+            runMins = estimated_2_4 // 60
+            runSecs = estimated_2_4 % 60
             record.running = "{:02d}:{:02d}".format(int(runMins), int(runSecs))
         time.sleep(sleep)
 
