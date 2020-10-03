@@ -11,6 +11,7 @@ import traceback
 
 sleep = 2
 
+
 class Detail:
     def set_title(self, next_index):
         self.title = "Detail " + str(next_index)
@@ -31,7 +32,7 @@ class Detail:
                         self.purpose = re.findall(
                             r"(?<=for.)(.*)(?=)", line)[0].replace("\r", "")
                     else:
-                        s = line.replace("Supporting: ","").split(" ")
+                        s = line.replace("Supporting: ", "").split(" ")
                         self.supporting = s[0]
                         self.purpose = " ".join(s[1:])
                 elif line.startswith("Reporting"):
@@ -46,7 +47,8 @@ class Detail:
                         self.destination.append(dest_raw)
 
                 elif line.startswith("POC"):
-                    self.poc = re.findall(r"(?<=: )(.*)(?=\s?\([0-9])", line)[0]
+                    self.poc = re.findall(
+                        r"(?<=: )(.*)(?=\s?\([0-9])", line)[0]
                     self.poc_contact = re.findall(r"[0-9]{8}", line)[0]
                 elif re.findall(r"..\/..\/..", line):
                     dates, hrs = ["", ""]
@@ -71,18 +73,18 @@ class Detail:
 
                     self.mid = mid[0]
                     self.mid = self.mid.replace("MID", "")
-                    
+
             except Exception as e:
-                print("{}:{}".format(e,line))
+                print("{}:{}".format(e, line))
 
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
 
     def get_duration(self):
-        assert self.end_date != "","End date is not set"
+        assert self.end_date != "", "End date is not set"
 
-        assert self.start_time !="" or self.end_time != "", "Start or end time is not set"
+        assert self.start_time != "" or self.end_time != "", "Start or end time is not set"
 
         date_format = '%d/%m/%y %H%M'
         start_datetime = self.start_date + " " + self.start_time
@@ -91,12 +93,14 @@ class Detail:
         duration_end = datetime.strptime(end_datetime, date_format)
 
         return NotionDate(duration_start, duration_end)
-        
+
+
 class DetailUtils:
 
     def __init__(self, configs):
         self.configs = configs
-        self.client = NotionClient(token_v2=self.configs["token"], monitor=True, start_monitoring=True)
+        self.client = NotionClient(
+            token_v2=self.configs["token"], monitor=True, start_monitoring=True)
 
     def pre_process_detail(self, rawInput):
         myDetail = []
@@ -127,7 +131,7 @@ class DetailUtils:
 
     def check_if_ref_exists(self, table, keyword):
         result = self.get_table(table).get_rows(search=keyword)
-        
+
         if len(result) > 0:
             return result[0]
         else:
@@ -143,7 +147,7 @@ class DetailUtils:
         # check if vehicle type is valid
         veh_type_ref = self.check_if_ref_exists('veh_types', veh_type)
         assert veh_type_ref is not None, "Unknown Vehicle Type"
-        
+
         cv = self.get_table('veh_type_mid')
         row = cv.add_row()
         row.icon = '🚙'
@@ -228,18 +232,23 @@ class DetailUtils:
         result = cv.get_rows(search=detail.title)[0]
         return result
 
-    def insert_detail_to_notion(self, source):
-        # remove whatsapp bold
-        source = source.replace("*", "")
-        assert source != "", "No source provided."
+    def insert_detail_to_notion(self, source_id, debug=False):
+        # get raw input from page body
+        source = self.get_body(
+            "https://www.notion.so/c0j0s/{}".format(source_id.replace("-", "")))
 
         # preprocess source, return: detail object
         my_detail = self.pre_process_detail(source)
+
+        if debug:
+            return my_detail
+
         result = []
 
         # check if veh mid record exists, else create record, return: veh mid ref
         for detail in my_detail:
-            veh_ref = self.create_vehicle_md_type_record(detail.mid, detail.veh_type)
+            veh_ref = self.create_vehicle_md_type_record(
+                detail.mid, detail.veh_type)
             reporting_ref = self.create_camp_route(detail.resporting)
             destination_ref_list = []
             for item in detail.destination:
@@ -251,7 +260,8 @@ class DetailUtils:
 
             # create detail
             detail.set_title(new_detail_index)
-            detail.set_ref(veh_ref, boc_ref, reporting_ref, destination_ref_list)
+            detail.set_ref(veh_ref, boc_ref, reporting_ref,
+                           destination_ref_list)
             detail_ref = self.create_detail(detail)
             result.append(detail_ref)
 
@@ -272,6 +282,15 @@ class DetailUtils:
     def get_template(self, key):
         return self.client.get_block(self.get_config(key))
 
+    def get_body(self, subject_url):
+        body = self.client.get_block(subject_url)
+        x = []
+        for block in body.children:
+            if hasattr(block, 'title') and block.title != "":
+                x.append(block.title)
+        f = "\n".join(x).replace("_", "")
+        return f
+
 
 def gen_table_row_callback(record, changes):
     if changes[0][0] == "prop_changed":
@@ -282,7 +301,7 @@ def gen_table_row_callback(record, changes):
             record.status = "Processing"
             try:
                 handler.print("Detail generation task in progress")
-                record.result = notion.insert_detail_to_notion(record.source)
+                record.result = notion.insert_detail_to_notion(record.id)
                 record.status = "Completed"
                 handler.print("Detail generation task completed!")
             except Exception as e:
@@ -290,8 +309,10 @@ def gen_table_row_callback(record, changes):
                 handler.error(traceback.format_exc())
         time.sleep(sleep)
 
+
 def gen_reporting_text(veh_type, mid, avi, fe):
     return "1 x {} moving off from [] to []\nMID : {}\nTO : LCP JUN SHENG\nVC : []\nAVI : {}\nFE : {}\nPurpose : []".format(veh_type, mid, avi, fe)
+
 
 def boc_collection_row_callback(record, changes):
     if changes[0][0] == "prop_changed" and str(changes[0][2][1]) == "True":
@@ -316,6 +337,7 @@ def boc_collection_row_callback(record, changes):
                 record.generate_reporting_text = False
                 handler.print("Boc status invalid action")
         time.sleep(sleep)
+
 
 def main():
     try:
@@ -346,7 +368,7 @@ def init():
     handler = TaskHandler(sys.argv[1])
     handler.configs["detail_local_config"] = "https://www.notion.so/c0j0s/c0e922bee4fe47b3a4a375f75f0d1fb1?v=900566261aa748918638c9a4e0a4d113"
     notion = DetailUtils(handler.configs)
-    
+
     handler.print("Loading detail local configs")
     for row in notion.get_table("detail_local_config").get_rows():
         if row.name != "":
@@ -357,6 +379,7 @@ def init():
     collections["gen_task"] = notion.get_table("detail_gen_task")
     collections["detail"] = notion.get_table("detail_list")
     collections["boc"] = notion.get_table("boc_record")
+
 
 if __name__ == "__main__":
     init()
