@@ -288,7 +288,7 @@ class DetailUtils:
         for block in body.children:
             if hasattr(block, 'title') and block.title != "":
                 x.append(block.title)
-        f = "\n".join(x).replace("_", "")
+        f = "\n".join(x).replace("_", "").replace("*","")
         return f
 
 
