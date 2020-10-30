@@ -28,8 +28,8 @@ for file in os.listdir(directory):
         for line in f:
             if line.startswith('<title>'):
                 chapter['title'] = line.replace('<title>',"").replace(',飘天文学</title>','').replace('\n','')
-            if line.startswith("&nbsp;&nbsp;&nbsp;&nbsp;"):
-                chapter['content'] = line.replace('&nbsp;&nbsp;&nbsp;&nbsp;','　　').replace('<br /><br />','<br/>\n')
+            if line.startswith("<p>"):
+                chapter['content'] = line.replace('<p>','　　').replace('<br /><br />','<br/>\n')
         writeFile(output_path + "/chapter"+str(startinx)+".html",chapter)
         startinx += 1
 

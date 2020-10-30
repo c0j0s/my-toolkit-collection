@@ -1,0 +1,7 @@
+input/*
+output/*
+test/*
+tmp/*
+
+.vscode/
+*.epub
