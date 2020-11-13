@@ -240,6 +240,7 @@ class DetailUtils:
         my_detail = self.pre_process_detail(source)
 
         if debug:
+            print("!= Debug mode =!")
             return my_detail
 
         print("Found {} details...".format(len(my_detail)))
@@ -251,7 +252,7 @@ class DetailUtils:
 
         # check if veh mid record exists, else create record, return: veh mid ref
         for detail in my_detail:
-            print("1. Check if veh mid record exists...")
+            print("1. Check if veh mid{} record exists...".format(str(detail.mid)))
             veh_ref = self.create_vehicle_md_type_record(
                 detail.mid, detail.veh_type)
             reporting_ref = self.create_camp_route(detail.resporting)
@@ -265,7 +266,7 @@ class DetailUtils:
             boc_ref = self.create_boc_record(new_detail_index)
 
             # create detail
-            print("3. Create detail...")
+            print("3. Create detail{}...".format(new_detail_index))
             detail.set_title(new_detail_index)
             detail.set_ref(veh_ref, boc_ref, reporting_ref,
                            destination_ref_list)
