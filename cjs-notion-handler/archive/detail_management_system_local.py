@@ -1,7 +1,7 @@
 import traceback
 from detail_util import *
 
-DEBUG = False
+DEBUG = True
 
 source="""
 """
@@ -25,7 +25,7 @@ def main():
 def init():
     global notion, configs
     configs = {}
-    configs["token"]="db1a6166acb8664fd96c6f681cbebf8f47d1348ec38bfc8ab7c40e8e63b7cf731e79101d5762f847bb6c59ba462bdf30fcb094adc634c187b60c3670ff5866f0a34e4c6d247b47aaa2f1f95293f3"
+    configs["token"]=""
     configs["veh_types"] = "https://www.notion.so/c0j0s/d27519769c07444c87a3165ac53e1f50?v=50126105371e4e959b60879354f3379d"
     configs["veh_type_mid"] = "https://www.notion.so/c0j0s/603ea7ccad2847b4a5335ade8ffb7b08?v=7d647975956e49b896285ba8b133c15a"
     configs["camp_route"] = "https://www.notion.so/c0j0s/d8d88e11c1a64fd7bd5047c4fe3ae999?v=cde456130b0948e79882709c6763e4be"
