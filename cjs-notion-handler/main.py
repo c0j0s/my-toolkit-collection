@@ -2,7 +2,7 @@ import os
 from detail import *
 from notion_handler import NotionHandler
 from icalendar import *
-from flask import Response
+from flask import make_response
 
 def notion_handler(request):
     try:
@@ -26,7 +26,10 @@ def notion_handler(request):
             
         else:
             data = get_detail_calandar()
-            return data
+            resp = make_response(data)
+            resp.headers.set('Content-Disposition', 'attachment;filename=calendar.ics')
+            resp.headers.set('Content-Type', 'text/calendar;charset=utf-8')
+            return resp
 
     except Exception as e:
         print("notion_handler: " + str(e))

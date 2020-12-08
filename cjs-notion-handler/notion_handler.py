@@ -4,6 +4,7 @@ from notion.collection import CollectionRowBlock
 from datetime import datetime
 from detail import Detail
 from icalendar import *
+from functools import reduce
 
 class NotionHandler:
     notion_table = {}
@@ -42,6 +43,7 @@ class NotionHandler:
         """
         Get the latest detail index from notion
         """
+
         sort_params = [{
             "direction": "descending",
             "property": "name",
@@ -62,6 +64,7 @@ class NotionHandler:
         """
         Converts datetime string into NotionDate object.
         """
+
         date_format = '%d/%m/%y %H%M'
         start_datetime = sd + " " + st
         end_datetime = ed + " " + et
@@ -164,21 +167,22 @@ class NotionHandler:
         """
         Compile both detail and admin schedule, return list of events
         """
+
         cal = Calendar()
-        cal.add('prodid', '-//Microsoft Corporation//Outlook 16.0 MIMEDIR//EN')
+        cal.add('prodid', '-//Export from Notion//EN')
         cal.add('version', '2.0')
 
         # get detail tasking 
         cv = self.client.get_collection_view(self.notion_table["detail_list"])
 
-        for item in cv.collection.get_rows(search="Detail 01"):
+        for item in cv.collection.get_rows():
             event = Event()
             event.add('UID',item.id)
 
-            title = "[{}][MID{}] - {}".format(item.status, item.assigned_vehicle[0].mid, item.purpose)
+            title = "[{}] - {}".format(item.status, item.purpose)
             event.add('SUMMARY', title)
             description = "Supporting {} for {}.\n".format(item.supporting, item.purpose)
-            description += "- Vehicle           : {} (MID{})\n".format(item.assigned_vehicle[0].vehicle_type_ref[0].title, item.assigned_vehicle[0].mid)
+            description += "- Vehicle           : MID{} {}\n".format(item.assigned_vehicle[0].mid, item.assigned_vehicle[0].vehicle_type_ref[0].title)
             description += "- Reporting venue   : {}\n".format(item.reporting[0].title)
             description += "- Exercise venue    : {}\n".format(item.destination[0].title)
 
@@ -203,18 +207,24 @@ class NotionHandler:
             title = "[{}] - {}".format(item.activity_type, item.title)
             event.add('SUMMARY', title)
             event.add('DTSTART', item.duration.start)
-            event.add('DTEND', item.duration.end)
+
+            if item.duration.end is not None:
+                event.add('DTEND', item.duration.end)
 
             if len(item.Location) > 0:
                 event.add('LOCATION',item.Location[0].title)
 
-            if item.type == "Off" or item.type == "Leave":
+            if item.activity_type == "Off" or item.activity_type == "Leave":
                 event.add('X-MICROSOFT-CDO-BUSYSTATUS',"FREE")
             else:
                 event.add('X-MICROSOFT-CDO-BUSYSTATUS',"BUSY")
 
             event.add('CN', 'c0j0s@hotmail.com')
-            event.add('DESCRIPTION', "")
+
+            if len(item.children) > 0:
+                desc = reduce(lambda x, y: "{} \n{}".format(x,y), map(lambda x: x.title, item.children))
+                event.add('DESCRIPTION', desc)
+
             cal.add_component(event)
 
         if self.debug:
