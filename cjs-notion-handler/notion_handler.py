@@ -171,6 +171,7 @@ class NotionHandler:
         cal = Calendar()
         cal.add('prodid', '-//Export from Notion//EN')
         cal.add('version', '2.0')
+        cal.add('TZID', 'Malay Peninsula Standard Time')
 
         # get detail tasking 
         cv = self.client.get_collection_view(self.notion_table["detail_list"])
