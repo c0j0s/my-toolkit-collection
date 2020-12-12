@@ -2,6 +2,11 @@ import json
 import re
 
 class Detail:
+    """
+    Detail object class, methods to interact with detail data.
+    v0.01
+    """
+
     reporting_ref = None
     veh_ref = None
     destination_ref = None
@@ -90,64 +95,3 @@ class Detail:
         return json.dumps(self.__dict__, indent=4)
 
 
-"""
-Utility functions
-"""
-
-def text_to_detail_list(source:str = "" , debug=False) -> list:
-    """
-    Converts text into an array of detail array.
-    source: raw text input
-    """
-    assert source != "", "Source cannot be empty"
-
-    # Split into lines
-    source = source.split("\n")
-
-    # Split Into Days
-    detail_text_in_days = []
-    detail_per_day = []
-
-    allow_entry = False
-
-    # Split detail text into days
-    # ============================
-    for line in source:
-        line = line.replace("\r","").replace("\n","")
-
-        if re.search("^_*", line)[0] != "":
-            detail_text_in_days.append(detail_per_day[:])
-            detail_per_day.clear()
-        else:
-            # Throw empty line
-            if line != "":
-                detail_per_day.append(line)
-    
-    # Add last entry is exist
-    if len(detail_per_day) > 0:
-        detail_text_in_days.append(detail_per_day[:])
-
-    # Split detail text into individual detail array
-    # ============================
-    detail_list = []
-
-    for item in detail_text_in_days:
-        if len(item) > 1:
-            detail = []
-            for line in item:
-                if re.search(r"^[0-9]{2}$", line) is not None:
-                    allow_entry = True
-                    continue
-
-                if allow_entry:
-                    detail.append(line)
-
-                if line.startswith("POC"):
-                    allow_entry = False
-                    detail_list.append(detail[:])
-                    detail.clear()
-        
-    if debug:
-        print("[DEBUG] text_to_detail_objects: {}".format(str(len(detail_list))))
-
-    return detail_list
