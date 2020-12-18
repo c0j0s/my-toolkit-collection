@@ -6,6 +6,9 @@ import datetime
 
 def service_handler(request):
     try:
+        """
+        v0.01
+        """
         request_json = request.get_json()
         
         data = get_calandar(os.environ.get('token'))

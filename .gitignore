@@ -1,3 +1,4 @@
 
 cjs-notion-handler/local.py
 *.pyc
+notion_ics.py
