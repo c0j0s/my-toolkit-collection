@@ -3,11 +3,12 @@ from notion_handler import NotionHandler
 from icalendar import *
 import re
 from functools import reduce
+import datetime
 
 class NotionController:
     """
     For front-end layer to request feature related functions
-    v0.01
+    v0.02
     """
 
     def __init__(self, token, debug=False):
@@ -151,11 +152,13 @@ class NotionController:
             poc = item.poc.split("](")
             description += "- POC               : {}\r\n".format("{} <{}>".format(poc[0].replace("[",""),poc[1].replace(")","")))
 
-            event.add('DTSTART', item.duration.start)
-            event.add('DTEND', item.duration.end)
+            start, end = self.__notion_date_to_ical__(item.duration.start,item.duration.end)
+            event.add('DTSTART', start)
+            if end is not None:
+                event.add('DTEND', end)
+
             event.add('LOCATION',item.destination[0].title)
             event.add('X-MICROSOFT-CDO-BUSYSTATUS',"BUSY")
-            event.add('CN', 'c0j0s@hotmail.com')
             event.add('DESCRIPTION', description)
             cal.add_component(event)
             
@@ -168,10 +171,11 @@ class NotionController:
 
             title = "[{}] - {}".format(item.activity_type, item.title)
             event.add('SUMMARY', title)
-            event.add('DTSTART', item.duration.start)
 
-            if item.duration.end is not None:
-                event.add('DTEND', item.duration.end)
+            start, end = self.__notion_date_to_ical__(item.duration.start,item.duration.end)
+            event.add('DTSTART', start)
+            if end is not None:
+                event.add('DTEND', end)
 
             if len(item.Location) > 0:
                 event.add('LOCATION',item.Location[0].title)
@@ -180,8 +184,6 @@ class NotionController:
                 event.add('X-MICROSOFT-CDO-BUSYSTATUS',"FREE")
             else:
                 event.add('X-MICROSOFT-CDO-BUSYSTATUS',"BUSY")
-
-            event.add('CN', 'c0j0s@hotmail.com')
 
             if len(item.children) > 0:
                 desc = reduce(lambda x, y: "{} \n{}".format(x,y), map(lambda x: x.title, item.children))
@@ -194,3 +196,13 @@ class NotionController:
             print(cal.to_ical().decode("utf-8"))
 
         return cal.to_ical().decode("utf-8")
+
+    def __notion_date_to_ical__(self, start, end=None):
+        """
+        Add end date for event without time specified
+        """
+
+        if end is not None and not isinstance(end, datetime.datetime):
+            end += datetime.timedelta(days=(1))
+        
+        return start, end
