@@ -5,7 +5,7 @@ import re
 class Detail:
     """
     Detail object class, methods to interact with detail data.
-    v0.01
+    v0.02
     """
 
     reporting_ref = None
@@ -35,7 +35,7 @@ class Detail:
         """
         for line in source:
             s = line.split(":")
-
+            
             if len(s) > 1:
                 # Other line
                 initial = s[0]
@@ -57,34 +57,33 @@ class Detail:
                     self.supporting = x[0].lstrip()
                     self.purpose = " ".join(x[1:]).lstrip()
                 else:
-                    if person in content:
-                        self.is_subject = True
+                    if not self.is_subject:
+                        if person in content:
+                            self.is_subject = True
+                            vt = re.search(r"(?<=x ).*", initial)
+                            assert vt is not None, "Unable to cast vehicle type string"
 
-                        vt = re.search(r"(?<=x ).*", initial)
-                        assert vt is not None, "Unable to cast vehicle type string"
-
-                        self.veh_type = vt[0].upper()
-                        for i in content.split(", "):
-                            if person in i:
-                                mid = re.search(r"(?<=\(MID)[0-9]{5}(?=\))", i)
-                                assert mid is not None, "Unable to cast MID string"
-
-                                self.mid = mid[0]
-                    else:
-                        self.mid = ""
-                        self.veh_type = ""
-                        self.is_subject = False
+                            self.veh_type = vt[0].upper()
+                            for i in content.split(", "):
+                                if person in i:
+                                    mid = re.search(r"(?<=\(MID)[0-9]{5}(?=\))", i)
+                                    assert mid is not None, "Unable to cast MID string"
+                                    self.mid = mid[0]
+                        else:
+                            self.mid = ""
+                            self.veh_type = ""
+                            self.is_subject = False
             else:
                 # Duration line
-                dates = re.findall(r"..\/..\/..", line)
-                hrs = re.findall(r"[0-9]{4}(?=hrs)", line)
-                assert len(dates) > 1 and len(
-                    hrs) > 1, "Unable to cast duration string"
-
-                self.start_date = dates[0]
-                self.start_time = hrs[0]
-                self.end_date = dates[1]
-                self.end_time = hrs[1]
+                if " to " in line:
+                    dates = re.findall(r"..\/..\/..", line)
+                    hrs = re.findall(r"[0-9]{4}(?=hrs)", line)
+                    assert len(dates) > 1 and len(
+                        hrs) > 1, "Unable to cast duration string"
+                    self.start_date = dates[0]
+                    self.start_time = hrs[0]
+                    self.end_date = dates[1]
+                    self.end_time = hrs[1]
 
     """
     Helper functions

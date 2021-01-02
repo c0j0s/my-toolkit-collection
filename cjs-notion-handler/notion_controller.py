@@ -9,7 +9,7 @@ import datetime
 class NotionController:
     """
     For front-end layer to request feature related functions
-    v0.03
+    v0.04
     """
 
     def __init__(self, token, debug=False):
@@ -82,11 +82,16 @@ class NotionController:
         try:
             detail_list = self.split_text_to_detail_list(data)
             person_detail = []
+
             for item in detail_list:
                 d = Detail()
-                d.build_detail_objects_from_list(item, debug=False)
+                d.build_detail_objects_from_list(item, debug=self.debug)
                 if d.is_subject:
                     person_detail.append(d)
+
+                    if self.debug:
+                        print(d.to_json())
+            
             return person_detail
         except Exception as e:
             return "[text_to_detail_json] " + str(e)
