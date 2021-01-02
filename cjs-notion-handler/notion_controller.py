@@ -5,17 +5,18 @@ import re
 from functools import reduce
 import datetime
 
+
 class NotionController:
     """
     For front-end layer to request feature related functions
-    v0.02
+    v0.03
     """
 
     def __init__(self, token, debug=False):
         self.debug = debug
         self.handler = NotionHandler(token, debug)
 
-    def split_text_to_detail_list(self, source:str = "") -> list:
+    def split_text_to_detail_list(self, source: str = "") -> list:
         """
         Converts text into an array of detail array.
         source: raw text input
@@ -23,7 +24,7 @@ class NotionController:
         assert source != "", "Source cannot be empty"
 
         # Remove whatsapp bold
-        source = source.replace("*","")
+        source = source.replace("*", "")
 
         # Split into lines
         source = source.split("\n")
@@ -37,7 +38,7 @@ class NotionController:
         # Split detail text into days
         # ============================
         for line in source:
-            line = line.replace("\r","").replace("\n","")
+            line = line.replace("\r", "").replace("\n", "")
 
             if re.search("^_*", line)[0] != "":
                 detail_text_in_days.append(detail_per_day[:])
@@ -46,7 +47,7 @@ class NotionController:
                 # Throw empty line
                 if line != "":
                     detail_per_day.append(line)
-        
+
         # Add last entry is exist
         if len(detail_per_day) > 0:
             detail_text_in_days.append(detail_per_day[:])
@@ -70,9 +71,10 @@ class NotionController:
                         allow_entry = False
                         detail_list.append(detail[:])
                         detail.clear()
-            
+
         if self.debug:
-            print("[split_text_to_detail_list] {}".format(str(len(detail_list))))
+            print("[split_text_to_detail_list] {}".format(
+                str(len(detail_list))))
 
         return detail_list
 
@@ -82,7 +84,7 @@ class NotionController:
             person_detail = []
             for item in detail_list:
                 d = Detail()
-                d.build_detail_objects_from_list(item,debug=False)
+                d.build_detail_objects_from_list(item, debug=False)
                 if d.is_subject:
                     person_detail.append(d)
             return person_detail
@@ -93,7 +95,7 @@ class NotionController:
         detail = Detail(**data)
         return self.write_detail_object_to_notion(detail)
 
-    def write_detail_object_to_notion(self, d:Detail):
+    def write_detail_object_to_notion(self, d: Detail):
         try:
             detail_index = self.handler.get_latest_detail_index() + 1
 
@@ -103,24 +105,29 @@ class NotionController:
                 print("[write_detail_object_to_notion] {}".format(d.mid))
 
             d.title = "Detail {}".format(detail_index)
-            d.duration = self.handler.to_notion_duration(d.start_date,d.start_time,d.end_date,d.end_time)
-            
-            d.veh_ref = self.handler.if_ref_exists(self.handler.notion_table["veh_type_mid"], d.mid)
+            d.duration = self.handler.to_notion_duration(
+                d.start_date, d.start_time, d.end_date, d.end_time)
+
+            d.veh_ref = self.handler.if_ref_exists(
+                self.handler.notion_table["veh_type_mid"], d.mid)
             if d.veh_ref is False:
-                d.veh_ref = self.handler.create_vehicle_mid_type_record(d.mid,d.veh_type)
-            
-            d.reporting_ref = self.handler.if_ref_exists(self.handler.notion_table["camp_route"], d.reporting)
+                d.veh_ref = self.handler.create_vehicle_mid_type_record(
+                    d.mid, d.veh_type)
+
+            d.reporting_ref = self.handler.if_ref_exists(
+                self.handler.notion_table["camp_route"], d.reporting)
             if d.reporting_ref is False:
                 d.reporting_ref = self.handler.create_camp_route(d.reporting)
-            
-            d.destination_ref = self.handler.if_ref_exists(self.handler.notion_table["camp_route"], d.destination)
+
+            d.destination_ref = self.handler.if_ref_exists(
+                self.handler.notion_table["camp_route"], d.destination)
             if d.destination_ref is False:
                 d.destination_ref = self.handler.create_camp_route(d.reporting)
-            
+
             d.boc_ref = self.handler.create_boc_record(detail_index)
 
             result = self.handler.create_detail(d)
-            
+
             return result
         except Exception as e:
             return "[write_detail_object_to_notion] " + str(e)
@@ -135,61 +142,82 @@ class NotionController:
         cal.add('version', '2.0')
         cal.add('TZID', 'Malay Peninsula Standard Time')
 
-        # get detail tasking 
-        cv = self.handler.client.get_collection_view(self.handler.notion_table["detail_list"])
+        # get detail tasking
+        cv = self.handler.client.get_collection_view(
+            self.handler.notion_table["detail_list"])
 
         for item in cv.collection.get_rows():
-            event = Event()
-            event.add('UID',item.id)
+            try:
+                event = Event()
+                event.add('UID', item.id)
 
-            title = "[{}] - {}".format(item.status, item.purpose)
-            event.add('SUMMARY', title)
-            description = "Supporting {} for {}.\n".format(item.supporting, item.purpose)
-            description += "- Vehicle           : MID{} {}\n".format(item.assigned_vehicle[0].mid, item.assigned_vehicle[0].vehicle_type_ref[0].title)
-            description += "- Reporting venue   : {}\n".format(item.reporting[0].title)
-            description += "- Exercise venue    : {}\n".format(item.destination[0].title)
+                title = "[{}] - {}".format(item.status, item.purpose)
+                event.add('SUMMARY', title)
+                description = "Supporting {} for {}.\n".format(
+                    item.supporting, item.purpose)
+                description += "- Vehicle           : MID{} {}\n".format(
+                    item.assigned_vehicle[0].mid, item.assigned_vehicle[0].vehicle_type_ref[0].title)
+                description += "- Reporting venue   : {}\n".format(
+                    item.reporting[0].title)
+                description += "- Exercise venue    : {}\n".format(
+                    item.destination[0].title)
 
-            poc = item.poc.split("](")
-            description += "- POC               : {}\r\n".format("{} <{}>".format(poc[0].replace("[",""),poc[1].replace(")","")))
+                poc = item.poc.split("](")
+                description += "- POC               : {}\r\n".format(
+                    "{} <{}>".format(poc[0].replace("[", ""), poc[1].replace(")", "")))
 
-            start, end = self.__notion_date_to_ical__(item.duration.start,item.duration.end)
-            event.add('DTSTART', start)
-            if end is not None:
-                event.add('DTEND', end)
+                start, end = self.__notion_date_to_ical__(
+                    item.duration.start, item.duration.end)
+                event.add('DTSTART', start)
+                if end is not None:
+                    event.add('DTEND', end)
 
-            event.add('LOCATION',item.destination[0].title)
-            event.add('X-MICROSOFT-CDO-BUSYSTATUS',"BUSY")
-            event.add('DESCRIPTION', description)
-            cal.add_component(event)
-            
+                event.add('LOCATION', item.destination[0].title)
+                event.add('X-MICROSOFT-CDO-BUSYSTATUS', "BUSY")
+                event.add('DESCRIPTION', description)
+                cal.add_component(event)
+            except Exception as e:
+                # skip item with invalid fields
+                print(e)
+
         # get admin schedule
-        cv = self.handler.client.get_collection_view(self.handler.notion_table["admin_schedule"])
+        cv = self.handler.client.get_collection_view(
+            self.handler.notion_table["admin_schedule"])
 
         for item in cv.collection.get_rows():
-            event = Event()
-            event.add('UID',item.id)
+            try:
+                event = Event()
+                event.add('UID', item.id)
 
-            title = "[{}] - {}".format(item.activity_type, item.title)
-            event.add('SUMMARY', title)
+                title = "[{}] - {}".format(item.activity_type, item.title)
+                event.add('SUMMARY', title)
 
-            start, end = self.__notion_date_to_ical__(item.duration.start,item.duration.end)
-            event.add('DTSTART', start)
-            if end is not None:
-                event.add('DTEND', end)
+                if debug:
+                    print("Creating event: {}".format(title))
 
-            if len(item.Location) > 0:
-                event.add('LOCATION',item.Location[0].title)
+                start, end = self.__notion_date_to_ical__(
+                    item.duration.start, item.duration.end)
+                event.add('DTSTART', start)
+                if end is not None:
+                    event.add('DTEND', end)
 
-            if item.activity_type == "Off" or item.activity_type == "Leave":
-                event.add('X-MICROSOFT-CDO-BUSYSTATUS',"FREE")
-            else:
-                event.add('X-MICROSOFT-CDO-BUSYSTATUS',"BUSY")
+                if len(item.Location) > 0:
+                    event.add('LOCATION', item.Location[0].title)
 
-            if len(item.children) > 0:
-                desc = reduce(lambda x, y: "{} \n{}".format(x,y), map(lambda x: x.title, item.children))
-                event.add('DESCRIPTION', desc)
+                if item.activity_type == "Off" or item.activity_type == "Leave":
+                    event.add('X-MICROSOFT-CDO-BUSYSTATUS', "FREE")
+                else:
+                    event.add('X-MICROSOFT-CDO-BUSYSTATUS', "BUSY")
 
-            cal.add_component(event)
+                if len(item.children) > 0:
+                    desc = reduce(lambda x, y: "{} \n{}".format(
+                        x, y), map(lambda x: x.title, item.children))
+                    event.add('DESCRIPTION', desc)
+
+                cal.add_component(event)
+            except Exception as e:
+                # skip item with invalid fields
+                print(e)
 
         if self.debug:
             print("[get_ns_events]")
@@ -204,5 +232,5 @@ class NotionController:
 
         if end is not None and not isinstance(end, datetime.datetime):
             end += datetime.timedelta(days=(1))
-        
+
         return start, end

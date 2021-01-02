@@ -1,6 +1,7 @@
 import json
 import re
 
+
 class Detail:
     """
     Detail object class, methods to interact with detail data.
@@ -12,22 +13,22 @@ class Detail:
     destination_ref = None
     boc_ref = None
 
-    def __init__(self,is_subject="",veh_type="",mid="",supporting="",purpose="",start_date="",start_time="",end_date="",end_time="",reporting="",destination="",poc_contact="",poc=""):
+    def __init__(self, is_subject="", veh_type="", mid="", supporting="", purpose="", start_date="", start_time="", end_date="", end_time="", reporting="", destination="", poc_contact="", poc=""):
         self.is_subject = is_subject
         self.veh_type = veh_type
-        self.mid  = mid
-        self.supporting  = supporting
-        self.purpose  = purpose
-        self.start_date  = start_date
-        self.start_time  = start_time
-        self.end_date  = end_date
-        self.end_time  = end_time
-        self.reporting  = reporting
+        self.mid = mid
+        self.supporting = supporting
+        self.purpose = purpose
+        self.start_date = start_date
+        self.start_time = start_time
+        self.end_date = end_date
+        self.end_time = end_time
+        self.reporting = reporting
         self.destination = destination
-        self.poc  = poc
-        self.poc_contact  = poc_contact
+        self.poc = poc
+        self.poc_contact = poc_contact
 
-    def build_detail_objects_from_list(self, source:list, person:str="JUNSHENG",debug=False):
+    def build_detail_objects_from_list(self, source: list, person: str = "JUNSHENG", debug=False):
         """
         Converts list of detail text into an detail object.
         source: detail text list
@@ -77,13 +78,14 @@ class Detail:
                 # Duration line
                 dates = re.findall(r"..\/..\/..", line)
                 hrs = re.findall(r"[0-9]{4}(?=hrs)", line)
-                assert len(dates) > 1 and len(hrs) > 1, "Unable to cast duration string"
+                assert len(dates) > 1 and len(
+                    hrs) > 1, "Unable to cast duration string"
 
                 self.start_date = dates[0]
                 self.start_time = hrs[0]
                 self.end_date = dates[1]
                 self.end_time = hrs[1]
-           
+
     """
     Helper functions
     """
@@ -93,5 +95,3 @@ class Detail:
         Converts detail object to JSON string.
         """
         return json.dumps(self.__dict__, indent=4)
-
-
