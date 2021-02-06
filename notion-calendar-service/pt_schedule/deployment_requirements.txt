@@ -1,0 +1,5 @@
+# Function dependencies, for example:
+# package>=version
+Flask==1.1.2
+icalendar==4.0.7
+notion==0.0.28

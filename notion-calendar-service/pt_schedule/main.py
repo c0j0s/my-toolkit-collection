@@ -15,7 +15,10 @@ def service_handler(request):
         title_format = r"[{Status}] {NAME}"
         token = os.environ.get('token')
         client = NotionClient(token, monitor=False)
-        cal = get_ical(client, calendar_url, title_format)
+
+        event_properties = {'X-MICROSOFT-CDO-BUSYSTATUS':'BUSY'}
+
+        cal = get_ical(client, calendar_url, title_format, **event_properties)
         text = cal.to_ical()
     except Exception as e:
         traceback.print_exc()
@@ -30,7 +33,7 @@ def service_handler(request):
             cal.add_component(event)
         text = cal.to_ical()
     
-    res = make_response(text)
+    res = make_response(text.decode("utf-8"))
     res.headers.set('Content-Disposition', 'attachment;filename=calendar.ics')
     res.headers.set('Content-Type', 'text/calendar;charset=utf-8')
     return res

@@ -2,3 +2,4 @@
 cjs-notion-handler/local.py
 *.pyc
 notion_ics.py
+notion-calendar-service/pt_schedule/.env
