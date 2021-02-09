@@ -11,7 +11,7 @@ def service_handler(request):
     """
     try:
         request_json = request.get_json()
-        controller = NotionController(os.environ.get('token'))
+        controller = NotionController(os.environ.get('token'), debug=True)
 
         if request_json and 'method' in request_json and 'token' in request_json:
             assert request_json["token"] == os.environ.get('token')

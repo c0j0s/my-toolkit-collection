@@ -197,7 +197,7 @@ class NotionController:
                 title = "[{}] - {}".format(item.activity_type, item.title)
                 event.add('SUMMARY', title)
 
-                if debug:
+                if self.debug:
                     print("Creating event: {}".format(title))
 
                 start, end = self.__notion_date_to_ical__(
