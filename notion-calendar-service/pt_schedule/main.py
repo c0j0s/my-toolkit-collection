@@ -12,7 +12,7 @@ def service_handler(request):
     """
     try:
         calendar_url = "https://www.notion.so/c0j0s/f742b24ad09046f68b383b4c70c229bc?v=2bcafe612c5c4ae981c2111ca7cc1b20"
-        title_format = r"[{Status}] {NAME}"
+        title_format = r"{NAME} - {Status}"
         token = os.environ.get('token')
         client = NotionClient(token, monitor=False)
 
