@@ -9,7 +9,7 @@ import datetime
 class NotionController:
     """
     For front-end layer to request feature related functions
-    v0.04
+    v0.05
     """
 
     def __init__(self, token, debug=False):
@@ -156,19 +156,19 @@ class NotionController:
                 event = Event()
                 event.add('UID', item.id)
 
-                title = "[{}] - {}".format(item.status, item.purpose)
+                title = "{} - {}".format(item.purpose, item.status)
                 event.add('SUMMARY', title)
-                description = "Supporting {} for {}.\n".format(
-                    item.supporting, item.purpose)
-                description += "- Vehicle           : MID{} {}\n".format(
+                # description = "Supporting {} for {}.\n".format(
+                #     item.supporting, item.purpose)
+                description = "- Vehicle: MID{} {}\n".format(
                     item.assigned_vehicle[0].mid, item.assigned_vehicle[0].vehicle_type_ref[0].title)
-                description += "- Reporting venue   : {}\n".format(
+                description += "- Reporting venue: {}\n".format(
                     item.reporting[0].title)
-                description += "- Exercise venue    : {}\n".format(
+                description += "- Exercise venue: {}\n".format(
                     item.destination[0].title)
 
                 poc = item.poc.split("](")
-                description += "- POC               : {}\r\n".format(
+                description += "- POC: {}\r\n".format(
                     "{} <{}>".format(poc[0].replace("[", ""), poc[1].replace(")", "")))
 
                 start, end = self.__notion_date_to_ical__(
@@ -194,7 +194,7 @@ class NotionController:
                 event = Event()
                 event.add('UID', item.id)
 
-                title = "[{}] - {}".format(item.activity_type, item.title)
+                title = "{}".format(item.title)
                 event.add('SUMMARY', title)
 
                 if self.debug:
@@ -234,8 +234,12 @@ class NotionController:
         """
         Add end date for event without time specified
         """
-
+        # whole day event
         if end is not None and not isinstance(end, datetime.datetime):
             end += datetime.timedelta(days=(1))
+        
+        # hour event
+        if end is None:
+            end = start + datetime.timedelta(hours=(1))
 
         return start, end
