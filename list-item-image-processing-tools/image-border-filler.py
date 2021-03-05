@@ -1,10 +1,19 @@
 from PIL import Image
 import glob
 
+#===================================================
+# starting image index, default start from 0.
 skip = 0
-final_size = (1000,1000) # 1000 pixel by 1000 pixel
-margin_size_percent = 0.3 # 20%
-background_color = (255, 255, 255) # white
+
+# output image size, default 1000x1000.
+final_size = (1000,1000) 
+
+# margin to item size percentile, larger margin % = smaller item, default 0.3.
+margin_size_percent = 0.3 
+
+# margin color in RGB value, default white.
+background_color = (255, 255, 255) 
+#===================================================
 
 # add margin to image supplied
 def add_margin(img, top, right, bottom, left, background_color):

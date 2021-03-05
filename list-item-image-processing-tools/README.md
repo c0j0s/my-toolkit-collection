@@ -13,7 +13,7 @@ $  python3 image-border-filler.py
 - image-border-filler script adds border to all cropped images.
 - outputs the final product in `/output` folder.
 
-- Options that can be changed in image-border-filler.py:
+- Options that can be change in `image-border-filler.py`:
   ```python 
     # starting image index
     skip = 0
