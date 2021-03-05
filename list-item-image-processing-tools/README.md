@@ -28,6 +28,11 @@ $  python3 image-border-filler.py
     background_color = (255, 255, 255) 
     ```
 
+```bash
+$  ./reset_folder.sh
+```
+- Clears input cropped and output folder
+
 # Installation
 1. Follow guide at [auto-image-cropper](https://github.com/ritiek/auto-image-cropper).
 2. Add the scripts to the installation folder.
