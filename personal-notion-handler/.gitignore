@@ -141,3 +141,4 @@ config.json
 .vscode
 unit_testing
 bot_local.py
+local.py
