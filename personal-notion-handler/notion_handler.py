@@ -18,7 +18,7 @@ class NotionHandler:
     notion_table["veh_type_mid"] = "https://www.notion.so/c0j0s/603ea7ccad2847b4a5335ade8ffb7b08?v=7d647975956e49b896285ba8b133c15a"
     notion_table["camp_route"] = "https://www.notion.so/c0j0s/d8d88e11c1a64fd7bd5047c4fe3ae999?v=cde456130b0948e79882709c6763e4be"
     notion_table["detail_list"] = "https://www.notion.so/c0j0s/42c45fe6aad64a719ac83d6dd52690a2?v=ce730b057d7c44c1853557d4dd1ece19"
-    notion_table["boc_record"] = "https://www.notion.so/c0j0s/5b319f55357e4c7fbac4ca863addb852?v=5b5aee2bd48d4b6b970f056d02984a82"
+    # notion_table["boc_record"] = "https://www.notion.so/c0j0s/5b319f55357e4c7fbac4ca863addb852?v=5b5aee2bd48d4b6b970f056d02984a82"
     notion_table["admin_schedule"] = "https://www.notion.so/c0j0s/2f422a7ee01e4c69be1df1746e187fbf?v=21393046f06e43dda4cf4c21612a8241"
 
     def __init__(self, token, debug=False):
@@ -127,7 +127,7 @@ class NotionHandler:
 
         return row
 
-    def create_boc_record(self, detail_index):
+    # def create_boc_record(self, detail_index):
         """
         create a new boc record for new detail
         """
@@ -161,7 +161,7 @@ class NotionHandler:
                                                          detail.poc_contact, detail.poc_contact)
 
         row.assigned_vehicle = detail.veh_ref
-        row.bOC_record = detail.boc_ref
+        # row.bOC_record = detail.boc_ref
         row.reporting = detail.reporting_ref
         row.destination = detail.destination_ref
         row.duration = detail.duration

@@ -129,7 +129,7 @@ class NotionController:
             if d.destination_ref is False:
                 d.destination_ref = self.handler.create_camp_route(d.reporting)
 
-            d.boc_ref = self.handler.create_boc_record(detail_index)
+            # d.boc_ref = self.handler.create_boc_record(detail_index)
 
             result = self.handler.create_detail(d)
 
