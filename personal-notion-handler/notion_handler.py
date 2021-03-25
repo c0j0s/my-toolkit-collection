@@ -128,9 +128,9 @@ class NotionHandler:
         return row
 
     # def create_boc_record(self, detail_index):
-    #     """
-    #     create a new boc record for new detail
-    #     """
+        """
+        create a new boc record for new detail
+        """
 
     #     cv = self.client.get_collection_view(self.notion_table['boc_record'])
     #     row = cv.collection.add_row()
