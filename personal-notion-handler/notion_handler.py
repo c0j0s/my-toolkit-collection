@@ -128,22 +128,22 @@ class NotionHandler:
         return row
 
     # def create_boc_record(self, detail_index):
-        """
-        create a new boc record for new detail
-        """
+    #     """
+    #     create a new boc record for new detail
+    #     """
 
-        cv = self.client.get_collection_view(self.notion_table['boc_record'])
-        row = cv.collection.add_row()
-        row.icon = '☑️'
-        row.title = "Detail " + str(detail_index) + "/1"
-        row.status = "Not Started"
+    #     cv = self.client.get_collection_view(self.notion_table['boc_record'])
+    #     row = cv.collection.add_row()
+    #     row.icon = '☑️'
+    #     row.title = "Detail " + str(detail_index) + "/1"
+    #     row.status = "Not Started"
 
-        if self.debug:
-            print("[create_boc_record]")
-            print(row)
-            print("-")
+    #     if self.debug:
+    #         print("[create_boc_record]")
+    #         print(row)
+    #         print("-")
 
-        return row
+    #     return row
 
     def create_detail(self, detail: Detail):
         """
