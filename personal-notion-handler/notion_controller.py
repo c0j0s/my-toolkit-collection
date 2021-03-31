@@ -9,7 +9,7 @@ import datetime
 class NotionController:
     """
     For front-end layer to request feature related functions
-    v0.05
+    v0.06
     """
 
     def __init__(self, token, debug=False):
@@ -127,7 +127,7 @@ class NotionController:
             d.destination_ref = self.handler.if_ref_exists(
                 self.handler.notion_table["camp_route"], d.destination)
             if d.destination_ref is False:
-                d.destination_ref = self.handler.create_camp_route(d.reporting)
+                d.destination_ref = self.handler.create_camp_route(d.destination)
 
             # d.boc_ref = self.handler.create_boc_record(detail_index)
 
@@ -153,6 +153,7 @@ class NotionController:
 
         for item in cv.collection.get_rows():
             try:
+                print(item)
                 event = Event()
                 event.add('UID', item.id)
 
@@ -167,9 +168,12 @@ class NotionController:
                 description += "- Exercise venue: {}\n".format(
                     item.destination[0].title)
 
-                poc = item.poc.split("](")
-                description += "- POC: {}\r\n".format(
-                    "{} <{}>".format(poc[0].replace("[", ""), poc[1].replace(")", "")))
+                if "](" in item.poc:
+                    poc = item.poc.split("](")
+                    description += "- POC: {}\r\n".format(
+                        "{} <{}>".format(poc[0].replace("[", ""), poc[1].replace(")", "")))
+                else:
+                    poc = item.poc
 
                 start, end = self.__notion_date_to_ical__(
                     item.duration.start, item.duration.end)
@@ -183,7 +187,7 @@ class NotionController:
                 cal.add_component(event)
             except Exception as e:
                 # skip item with invalid fields
-                print(e)
+                print("get_ns_events - details: " + str(e))
 
         # get admin schedule
         cv = self.handler.client.get_collection_view(
@@ -222,7 +226,7 @@ class NotionController:
                 cal.add_component(event)
             except Exception as e:
                 # skip item with invalid fields
-                print(e)
+                print("get_ns_events - admin: " + str(e))
 
         if self.debug:
             print("[get_ns_events]")

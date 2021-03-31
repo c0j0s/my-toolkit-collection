@@ -10,7 +10,7 @@ from functools import reduce
 class NotionHandler:
     """
     Support interaction with Notion
-    v0.01
+    v0.02
     """
 
     notion_table = {}
