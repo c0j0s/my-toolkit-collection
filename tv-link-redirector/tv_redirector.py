@@ -36,12 +36,12 @@ configs = [
             {
                 "method": "Network.requestWillBeSent",
                 "type": "request",
-                "search": "http://wowza-live.edge-{}.akamai.tvb.com/newslive/".format(locale)
+                "search": "https://prd-vcache.edge-global.akamai.tvb.com/__cl/slocalr2526/__c/ott_C_h264/__op/default/__f/index.m3u8"
             },
             {
                 "method": "Network.responseReceived",
                 "type": "response",
-                "search": "http://wowza-live.edge-{}.akamai.tvb.com/newslive/".format(locale)
+                "search": "https://prd-vcache.edge-global.akamai.tvb.com/__cl/slocalr2526/__c/ott_C_h264/__op/default/__f/index.m3u8"
             }
         ],
         "redirect":""
