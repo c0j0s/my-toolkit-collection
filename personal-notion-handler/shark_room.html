@@ -38,7 +38,7 @@
 
         div.card {
             box-shadow: 0 4px 8px 0 rgb(0 0 0 / 15%), 0px 1px 4px 0 rgb(0 0 0 / 19%);
-            width: 330px;
+            width: 320px;
             border-radius: 5px;
             overflow: hidden;
         }
@@ -112,7 +112,7 @@
             if (xhr.status >= 200 && xhr.status < 300) {
                 // parse JSON
                 const response = JSON.parse(xhr.responseText);
-                console.log(response);
+                // console.log(response);
                 element = document.getElementById("list")
                 response.forEach(rm => {
                     li_items = base_li_items
