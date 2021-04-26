@@ -5,13 +5,13 @@ import re
 class Detail:
     """
     Detail object class, methods to interact with detail data.
-    v0.02
+    v0.02.1
     """
 
     reporting_ref = None
     veh_ref = None
     destination_ref = None
-    boc_ref = None
+    # boc_ref = None
 
     def __init__(self, is_subject="", veh_type="", mid="", supporting="", purpose="", start_date="", start_time="", end_date="", end_time="", reporting="", destination="", poc_contact="", poc=""):
         self.is_subject = is_subject

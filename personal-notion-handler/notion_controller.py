@@ -4,12 +4,12 @@ from icalendar import *
 import re
 from functools import reduce
 import datetime
-
+import requests, time
 
 class NotionController:
     """
     For front-end layer to request feature related functions
-    v0.06
+    v0.07
     """
 
     def __init__(self, token, debug=False):
@@ -247,3 +247,27 @@ class NotionController:
             end = start + datetime.timedelta(hours=(1))
 
         return start, end
+
+    def get_shark_rooms(self, watchlist=[]):
+        """
+        Get room infos from shark apis
+        """
+
+        endpoint = "http://open.douyucdn.cn/api/RoomApi/room/{}"
+        external = "https://www.douyu.com/{}"
+        rooms=[]
+
+        if len(watchlist) > 0:
+            for i in watchlist:
+                try:
+                    r = requests.get(endpoint.format(str(i))).json()
+                    room_data = r["data"]
+                    del room_data["gift"]
+                    room_data["redirect"] = external.format(str(i))
+                    rooms.append(room_data)
+                    time.sleep(1)
+                except Exception as e:
+                    print(e)
+        rooms = sorted(rooms, key=lambda k: k['online'], reverse=True) 
+        
+        return rooms
