@@ -10,9 +10,10 @@
             padding: 0;
         }
 
-        #container{
+        #container {
             padding-left: 10px;
             padding-right: 10px;
+            padding-bottom: 20px;
             box-sizing: border-box;
         }
 
@@ -45,7 +46,7 @@
 
         div.card-img {
             float: left;
-           width: 40%;
+            width: 40%;
         }
 
         img {
@@ -60,7 +61,7 @@
             box-sizing: border-box;
         }
 
-        span{
+        span {
             color: #898989;
             font-size: smaller;
         }
@@ -69,7 +70,8 @@
             overflow: hidden;
             text-overflow: ellipsis;
             display: -webkit-box;
-            -webkit-line-clamp: 1; /* number of lines to show */
+            -webkit-line-clamp: 1;
+            /* number of lines to show */
             -webkit-box-orient: vertical;
             font-size: x-small;
         }
@@ -88,60 +90,63 @@
 <body>
     <div id="container">
         <ul id="list">
-            
+
         </ul>
     </div>
+    <footer>
+        @COJOS 2021
+    </footer>
 </body>
 <script>
-        base_li_items = '<li><div class="card"><a href="{{redirect}}"><div class="card-img"><img src="{{room_thumb}}" alt="room_thumb"></div><div class="card-content"><p class="text">{{room_name}}</p><span class="text">{{owner_name}}</span><span class="text {{room_status_style}}">{{room_status}}</span></div></a></div></li>'
+    base_li_items = '<li><div class="card"><a href="{{redirect}}"><div class="card-img"><img src="{{room_thumb}}" alt="room_thumb"></div><div class="card-content"><p class="text">{{room_name}}</p><span class="text">{{owner_name}}</span><span class="text {{room_status_style}}">{{room_status}}</span></div></a></div></li>'
 
-        endpoint = "https://asia-east2-brilliant-scene-262808.cloudfunctions.net/NotionHandler"
+    endpoint = "https://asia-east2-brilliant-scene-262808.cloudfunctions.net/NotionHandler"
 
-        // create a JSON object
-        const data = {
-            "method":"get_shark_rooms",
-            "payload":["309923","503866","69752","4901550","156277","414451","610588"]
+    // create a JSON object
+    const data = {
+        "method": "get_shark_rooms",
+        "payload": ["309923", "503866", "69752", "4901550", "156277", "414451", "610588"]
+    }
+
+    const xhr = new XMLHttpRequest();
+
+    // listen for `load` event
+    xhr.onload = () => {
+
+        // print JSON response
+        if (xhr.status >= 200 && xhr.status < 300) {
+            // parse JSON
+            const response = JSON.parse(xhr.responseText);
+            // console.log(response);
+            element = document.getElementById("list")
+            response.forEach(rm => {
+                li_items = base_li_items
+                li_items = li_items.replaceAll("{{room_thumb}}", rm.room_thumb)
+                li_items = li_items.replaceAll("{{room_name}}", rm.room_name)
+                li_items = li_items.replaceAll("{{owner_name}}", rm.owner_name)
+                li_items = li_items.replaceAll("{{redirect}}", rm.redirect)
+
+                if (rm.room_status == "1") {
+                    li_items = li_items.replaceAll("{{room_status}}", "直播中")
+                    li_items = li_items.replaceAll("{{room_status_style}}", "span-live")
+                } else {
+                    li_items = li_items.replaceAll("{{room_status}}", "未开播")
+                    li_items = li_items.replaceAll("{{room_status_style}}", "")
+                }
+                element.innerHTML += li_items
+            });
         }
+    };
 
-        const xhr = new XMLHttpRequest();
+    // open request
+    xhr.open('POST', endpoint);
 
-        // listen for `load` event
-        xhr.onload = () => {
+    // set `Content-Type` header
+    xhr.setRequestHeader('Content-Type', 'application/json');
 
-            // print JSON response
-            if (xhr.status >= 200 && xhr.status < 300) {
-                // parse JSON
-                const response = JSON.parse(xhr.responseText);
-                // console.log(response);
-                element = document.getElementById("list")
-                response.forEach(rm => {
-                    li_items = base_li_items
-                    li_items = li_items.replaceAll("{{room_thumb}}",rm.room_thumb)
-                    li_items = li_items.replaceAll("{{room_name}}",rm.room_name)
-                    li_items = li_items.replaceAll("{{owner_name}}",rm.owner_name)
-                    li_items = li_items.replaceAll("{{redirect}}",rm.redirect)
+    // send rquest with JSON payload
+    xhr.send(JSON.stringify(data));
 
-                    if(rm.room_status == "1"){
-                        li_items = li_items.replaceAll("{{room_status}}","直播中")
-                        li_items = li_items.replaceAll("{{room_status_style}}","span-live")
-                    }else{
-                        li_items = li_items.replaceAll("{{room_status}}","未开播")
-                        li_items = li_items.replaceAll("{{room_status_style}}","")
-                    }
-                    element.innerHTML += li_items
-                });
-            }
-        };
-
-        // open request
-        xhr.open('POST', endpoint);
-
-        // set `Content-Type` header
-        xhr.setRequestHeader('Content-Type', 'application/json');
-
-        // send rquest with JSON payload
-        xhr.send(JSON.stringify(data));
-        
-    </script>
+</script>
 
 </html>
