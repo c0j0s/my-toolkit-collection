@@ -2,13 +2,18 @@ import sys, os, logging, json
 from notion.client import NotionClient
 from notion.block import TodoBlock
 
-CONFIG_FILE = "../config.json"
-CONFIG = None
-LOG_FILE = "../status.log"
-LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+"""
+v0.01
+"""
 
 def init():
     global CONFIG
+
+    CONFIG_FILE = "../config.json"
+    CONFIG = None
+    LOG_FILE = "../status.log"
+    LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+
     if len(sys.argv) > 2:
         CONFIG_FILE = os.getcwd() + "/" + sys.argv[1] 
         LOG_FILE = os.getcwd() + "/" + sys.argv[2] 
@@ -56,4 +61,6 @@ def load_children(main_list, children_list):
 
 if __name__ == "__main__":
     init()
+    logging.debug("Running planning_zone_reporting task.")
     main()
+    logging.debug("Exit planning_zone_reporting task.")

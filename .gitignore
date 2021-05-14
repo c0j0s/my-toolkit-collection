@@ -6,3 +6,5 @@ notion_ics.py
 config.json
 *.log
 env
+local.py
+test.py
