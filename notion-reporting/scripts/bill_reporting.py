@@ -2,7 +2,7 @@ import sys, os, logging, json, re
 from notion.client import NotionClient
 
 """
-v0.01
+v0.02.1
 """
 
 def init():
@@ -19,7 +19,7 @@ def init():
 
     with open(CONFIG_FILE) as json_file:
         CONFIG = json.load(json_file)
-    logging.basicConfig(filename=LOG_FILE, level=logging.DEBUG, format=LOG_FORMAT)
+    logging.basicConfig(filename=LOG_FILE, level=logging.info, format=LOG_FORMAT)
     
 def main():
     client = NotionClient(token_v2=CONFIG["token"])
@@ -43,21 +43,17 @@ def main():
         }
 
     result = bill_raw_cv.build_query(filter=filter_params).execute()
-    logging.debug("{} bills found.".format(str(len(result))))
+    logging.info("{} bills found.".format(str(len(result))))
 
     if len(result) == 0:
-        logging.debug("No action needed.")
+        logging.info("No action needed.")
         return
 
-    try:
-        data = []
-        for item in result:
-            # read raw from notion
-            data.append(extractInfo(item.from_email,item.children[0].title))    
-            item.recorded = True
+    for item in result:
+        # read each raw bills sent from email
+        try:
+            bill = extractInfo(item.from_email,item.children[0].title)
 
-        for item in data:
-            # write to notion
             filter_params = {
             "operator": "and",
             "filters": [
@@ -67,7 +63,7 @@ def main():
                     "operator": "enum_is",
                     "value": {
                     "type": "exact",
-                    "value": item["mth"]
+                    "value": bill["mth"]
                     }
                 }
                 },
@@ -77,32 +73,38 @@ def main():
                     "operator": "enum_is",
                     "value": {
                     "type": "exact",
-                    "value": item["year"]
+                    "value": bill["year"]
                     }
                 }
                 }
             ]
             }
+
+            # query for existing row in bill record with same month and year
             result = bill_record_cv.build_query(filter=filter_params).execute()
 
             if len(result) > 0:
-                logging.debug("Existing bill record found, adding data")
+                logging.info("Existing bill record found, adding data")
                 row = result[0]
-                assignInfo(row,item)
             else:
-                logging.debug("No bill record found, creating data")
+                logging.info("No bill record found, creating a new row data")
                 row = bill_record_cv.collection.add_row()
-                row.title = item["year"] + "-" + item["mth"]
-                row.year = item["year"]
-                row.month = item["mth"]
+                row.title = bill["year"] + "-" + bill["mth"]
+                row.year = bill["year"]
+                row.month = bill["mth"]
                 row.internet = 29.90
                 row.refuse_removal = 8.2497
-                assignInfo(row,item)
 
-    except Exception as e:
-        logging.error(e)
-    finally:
-        logging.debug(data)
+            # assign other common attributes
+            assignInfo(row,bill)
+
+            # mark as completed
+            item.recorded = True
+        except Exception as e:
+            # mark as completed
+            item.recorded = False
+
+            logging.error(e)
 
 def extractInfo(biller,source):
     bill = {}
@@ -123,6 +125,13 @@ def extractInfo(biller,source):
         bill["sp_total"] = re.findall(r"(?<=\$).*\.[0-9]{2}",source)[0]
         bill["biller"] = "SPPOWER"
     
+    elif biller == "M1":
+        pass
+
+    else:
+        logging.error([biller,source])
+        raise Exception("Unable to identify biller.")
+
     return bill
 
 def assignInfo(row,bill):
@@ -135,10 +144,16 @@ def assignInfo(row,bill):
         row.water_usage = float(bill["water_usage"])
         row.sp_total = float(bill["sp_total"])
     
+    elif bill["biller"] == "M1":
+        pass
+    else:
+        logging.error([row,bill])
+        raise Exception("Unable to assign bill info to notin row.")
+
     return row
 
 if __name__ == "__main__":
     init()
-    logging.debug("Running bill_reporting task.")
+    logging.info("Running bill_reporting task.")
     main()
-    logging.debug("Exit bill_reporting task.")
+    logging.info("Exit bill_reporting task.")

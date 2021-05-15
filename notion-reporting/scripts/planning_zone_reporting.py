@@ -3,7 +3,7 @@ from notion.client import NotionClient
 from notion.block import TodoBlock
 
 """
-v0.01
+v0.01.2
 """
 
 def init():
@@ -20,7 +20,7 @@ def init():
 
     with open(CONFIG_FILE) as json_file:
         CONFIG = json.load(json_file)
-    logging.basicConfig(filename=LOG_FILE, level=logging.DEBUG, format=LOG_FORMAT)
+    logging.basicConfig(filename=LOG_FILE, level=logging.info, format=LOG_FORMAT)
     
 def main():
     client = NotionClient(token_v2=CONFIG["token"])
@@ -29,25 +29,25 @@ def main():
     filter_params = {"filters": [{
             "property": "D`kx",
             "filter": {
-            "operator": "enum_is_not",
+            "operator": "enum_is",
             "value": {
                 "type": "exact",
-                "value": "下架" 
+                "value": "进行中" 
             }}}
         ],
         "operator": "and"
     }
 
     result = cv.build_query(filter=filter_params).execute()
-    logging.debug("{} Plans found ".format(str(len(result))))
+    logging.info("{} Plans found ".format(str(len(result))))
 
     for row in result:
-        logging.debug("Computing " + row.title)
+        logging.info("Computing " + row.title)
         main_list = []
         main_list = load_children(main_list, row.children)
         row.task_total = len(main_list)
         row.task_completed = len(list(filter(lambda x:x.checked, main_list)))
-        logging.debug("Result for {} -> {}/{}".format(row.title, row.task_completed, row.task_total))
+        logging.info("Result for {} -> {}/{}".format(row.title, row.task_completed, row.task_total))
 
 def load_children(main_list, children_list):
     for item in children_list:
@@ -61,6 +61,6 @@ def load_children(main_list, children_list):
 
 if __name__ == "__main__":
     init()
-    logging.debug("Running planning_zone_reporting task.")
+    logging.info("Running planning_zone_reporting task.")
     main()
-    logging.debug("Exit planning_zone_reporting task.")
+    logging.info("Exit planning_zone_reporting task.")
