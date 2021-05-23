@@ -2,20 +2,22 @@ import telegram
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler
 import logging
-import os
+import os, sys
 from notion_controller import NotionController
 import json
-from decouple import config
 
 """
 v0.01
 """
+global config
+with open(sys.argv[1]) as json_f:
+    config = json.load(json_f)
 
-updater = Updater(token=config('bot_token'), use_context=True)
-controller = NotionController(config('token'), False)
+updater = Updater(token=config["bot_token"], use_context=True)
+controller = NotionController(config["notion_token"], False)
 dispatcher = updater.dispatcher
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+logging.basicConfig(filename=config["log_file"],format=config["log_format"],
                     level=logging.INFO)
 
 start_keyboard_markup = ReplyKeyboardMarkup([["/gen_detail"]],
