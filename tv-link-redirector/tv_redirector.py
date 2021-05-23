@@ -5,14 +5,13 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from webdriver_manager.chrome import ChromeDriverManager
 from apscheduler.schedulers.background import BackgroundScheduler
 import json
-import time
-import sys
+import logging
 import atexit
 import threading
 
 
-# from task_handler import TaskHandler
-# handler = TaskHandler(sys.argv[1])
+logging.basicConfig(filename="status.log",format="%(asctime)s - %(levelname)s - %(message)s",
+                    level=logging.INFO)
 
 app = Flask(__name__)
 chrome_driver = None
@@ -88,10 +87,10 @@ def stream(stream_id:int):
         if channel["redirect"] is None and chrome_driver is not None:
             update_stream(stream_id)
 
-        print("[/{}.m3u8 -> {}".format(str(stream_id),channel["redirect"]))
+        logging.info("[/{}.m3u8 -> {}".format(str(stream_id),channel["redirect"]))
         return redirect(channel["redirect"])
     except Exception as e:
-        print(str(e))
+        logging.error(str(e))
         return redirect("https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8"), 200 
 
 @app.route('/update')
@@ -129,20 +128,20 @@ def get_stream_link(channel):
                 return result
         return result
     except Exception as e:
-        print("[Exception] getLogs:" + str(e))
+        logging.error("[Exception] getLogs:" + str(e))
 
 def update_stream(stream_id:int = -1):
     global chrome_driver
     chrome_driver = webdriver.Chrome(chrome_engine, options=chrome_options, desired_capabilities=caps)
     if stream_id == -1:
         for idx, channel in enumerate(configs):
-            print("Updating stream index: {}".format(idx))
+            logging.info("Updating stream index: {}".format(idx))
             configs[idx]["redirect"] = get_stream_link(channel)
     else:
         if stream_id < len(configs):
             configs[stream_id]["redirect"] = get_stream_link(configs[stream_id])
         else:
-            print("Stream id invalid.")          
+            logging.info("Stream id invalid.")          
     chrome_driver.close()
 
 def main():
@@ -161,4 +160,4 @@ if __name__ == "__main__":
     # initialise flask
     app.debug = False
     # app.run(host='127.0.0.1', port=5000)
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=5990)
