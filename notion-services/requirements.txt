@@ -1,0 +1,5 @@
+# deployment packages
+Flask==2.0.0
+icalendar==4.0.7
+#notion==0.0.28
+git+https://github.com/c0j0s/notion-py.git

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>ToolKit Library</title>
+    <base href="/">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+</head>
+
+<body>
+    <textarea name="" id="source" cols="30" rows="10">
+
+    </textarea>
+    <button id="generate">Generate</button>
+    <div id="result">
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+    
+    <script>
+        class Detail {
+
+            constructor(arr){
+                try {
+                    arr.forEach(line => {
+                        if (line.startsWith("Supporting")) {
+                            this.supporting = line.match(/(?<=:)(.*)(?=for)/)[0].replace(/\s/g,'')
+                            this.purpose = line.match(/(?<=for.)(.*)(?=)/)[0]
+                        }
+                        else if(line.startsWith("Reporting")){
+                            this.resporting = line.split(": ")[1]
+                        }
+                        else if(line.startsWith("Destination")){
+                            this.destination = line.split(": ")[1]
+                        }
+                        else if(line.startsWith("POC")){
+                            this.POC = line.match(/(?<=: )(.*)(?= \([0-9])/)[0]
+                            this.POCContact = line.match(/[0-9]{8}/)[0]
+                        }else if(/..\/..\/../.test(line)){
+                            let dates,hrs = ["",""]
+
+                            dates = line.match(/..\/..\/../gm)
+                            hrs = line.match(/[0-9]{4}(?=hrs)/gm)
+                            
+                            this.startDateTime = dates[0] + " " + hrs[0]
+                            this.endDateTime = dates[1] + " " + hrs[1]
+                        }else if(/(?<=<REMOVED>.?<REMOVED> \()(.*)(?=\))/ .test(line)){
+                            this.vehType = line.match(/(?<=x )(.*)(?=:)/)[0]
+                            this.mid = line.match(/(?<=<REMOVED>.?<REMOVED> \()(MID[0-9]{5})(?=\))/)[0]
+                        }
+                    })                    
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+
+        var detailList = []
+
+        $("#generate").on('click', () => {
+            let source = $("#source").val().split('\n');
+            let sourceByDay = []
+            let dayTmp = []
+            source.forEach(line => {
+                if (!line.startsWith(" ") && line != "") {
+                    if (line.startsWith("_____")) {
+                        sourceByDay.push(dayTmp)
+                        dayTmp = [];
+                    }else{
+                        dayTmp.push(line)
+                    }
+                }
+            });
+
+            let myDetails = []
+            let singleTmp = []
+            sourceByDay.forEach(day => {
+                let detailCount = 1
+                let i = 0
+                day.forEach(line => {
+                    if (/^[0-9]{2}(?!\/)/gm.test(line)) {
+                        i = parseInt(line)
+                    }else{
+                        if (i == detailCount) {
+                            singleTmp.push(line)
+                        }
+                    }
+
+                    //detail count changes add to day detail
+                    if (line.startsWith("POC")) {
+                        singleTmp.forEach(item => {
+                            if (/<REMOVED>.?<REMOVED>/.test(item)) {
+                                myDetails.push(singleTmp)
+                                return
+                            }
+                        })
+                        
+                        singleTmp = []
+                        detailCount++
+                    }
+                })
+            })
+            
+            myDetails.forEach(item => {
+                console.log(item);
+                let d = new Detail(item)
+            })
+        })
+    </script>
+</body>
+
+</html>
