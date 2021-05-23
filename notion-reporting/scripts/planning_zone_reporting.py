@@ -20,7 +20,7 @@ def init():
 
     with open(CONFIG_FILE) as json_file:
         CONFIG = json.load(json_file)
-    logging.basicConfig(filename=LOG_FILE, level=logging.info, format=LOG_FORMAT)
+    logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
     
 def main():
     client = NotionClient(token_v2=CONFIG["token"])

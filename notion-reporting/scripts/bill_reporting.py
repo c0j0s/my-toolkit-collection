@@ -1,8 +1,10 @@
+from datetime import datetime
 import sys, os, logging, json, re
 from notion.client import NotionClient
+from notion.collection import NotionDate
 
 """
-v0.02.1
+v0.03
 """
 
 def init():
@@ -19,7 +21,7 @@ def init():
 
     with open(CONFIG_FILE) as json_file:
         CONFIG = json.load(json_file)
-    logging.basicConfig(filename=LOG_FILE, level=logging.info, format=LOG_FORMAT)
+    logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
     
 def main():
     client = NotionClient(token_v2=CONFIG["token"])
@@ -100,55 +102,53 @@ def main():
 
             # mark as completed
             item.recorded = True
+            item.recorded_on = NotionDate(datetime.now())
         except Exception as e:
             # mark as completed
             item.recorded = False
-
-            logging.error(e)
+            logging.error(e, " at main")
 
 def extractInfo(biller,source):
+    
     bill = {}
+    bill["mth"], bill["year"] = re.findall(r"(?<=[Y|y]our ).{8}(?= e?[B|b]ill)",source)[0].split(" ")
+    bill["mth"] = bill["mth"].capitalize()
 
-    if biller == "UNION POWER":
-        bill["mth"], bill["year"] = re.findall(r"(?<=your ).*(?= Bill)",source)[0].split(" ")
-        bill["mth"] = bill["mth"].capitalize() 
-
+    if biller == "collection@unionpower.com.sg":
         bill["elec"] = re.findall(r"(?<=Usage ).*(?= kWh)",source)[0]
         bill["elec_cost"] = re.findall(r"(?<=\$).*\.[0-9]{2}",source)[0]
-        bill["biller"] = "UNION POWER"
+        
 
-    elif biller == "SPPOWER":
-        bill["mth"], bill["year"] = re.findall(r"(?<=your ).{8}(?= bill))",source)[0].split(" ")
-        bill["mth"] = bill["mth"].capitalize()
-
-        bill["gas_usage"], bill["water_usage"] = re.findall(r"(?<=You)\d*\.\d+|\d+(?= E)",source)
+    elif biller == "ebillsummary@spgroup.com.sg":
+        bill["water_usage"], bill["gas_usage"] = re.findall(r"(?<=You)\d*\.?\d+|\d+(?= E)",source)
         bill["sp_total"] = re.findall(r"(?<=\$).*\.[0-9]{2}",source)[0]
-        bill["biller"] = "SPPOWER"
     
-    elif biller == "M1":
-        pass
+    elif biller == "ebill@m1.com.sg":
+        bill["internet"] = re.findall(r"(?<=\$).*\.[0-9]{2}",source)[0]
 
     else:
         logging.error([biller,source])
-        raise Exception("Unable to identify biller.")
+        raise Exception("Unable to identify biller at extractInfo.")
 
+    bill["biller"]=biller
     return bill
 
 def assignInfo(row,bill):
-    if bill["biller"] == "UNION POWER":
+    if bill["biller"] == "collection@unionpower.com.sg":
         row.electricity_usage = int(bill["elec"])
         row.electricity_fee = float(bill["elec_cost"])
 
-    elif bill["biller"] == "SPPOWER":
+    elif bill["biller"] == "ebillsummary@spgroup.com.sg":
         row.gas_usage = float(bill["gas_usage"])
         row.water_usage = float(bill["water_usage"])
         row.sp_total = float(bill["sp_total"])
     
-    elif bill["biller"] == "M1":
+    elif bill["biller"] == "ebill@m1.com.sg":
+        row.internet = float(bill["internet"])
         pass
     else:
         logging.error([row,bill])
-        raise Exception("Unable to assign bill info to notin row.")
+        raise Exception("Unable to assign bill info to notion row at assignInfo.")
 
     return row
 
