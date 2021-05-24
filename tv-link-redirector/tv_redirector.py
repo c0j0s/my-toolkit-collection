@@ -1,4 +1,5 @@
 from flask import Flask, redirect, session, request
+from pytz import HOUR
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -9,8 +10,7 @@ import logging
 import atexit
 import threading
 
-
-logging.basicConfig(filename="status.log",format="%(asctime)s - %(levelname)s - %(message)s",
+logging.basicConfig(filename="logs/error.log",format="%(asctime)s - %(levelname)s - %(message)s",
                     level=logging.INFO)
 
 app = Flask(__name__)
@@ -25,8 +25,6 @@ chrome_options.add_argument(
 
 caps = DesiredCapabilities.CHROME
 caps['goog:loggingPrefs'] = {'performance': 'ALL'}
-
-locale = "sg"#"global"
 
 configs = [
     {
@@ -46,33 +44,33 @@ configs = [
         "redirect":""
     },
     {
-        "host": "https://www.gdtv.cn/tvChannelDetail/44",
-        "filters": [
-            {
-                "method": "Network.requestWillBeSent",
-                "type": "request",
-                "search": "https://nclive.grtn.cn/zjpd/sd/live.m3u8?_upt="
-            },
-            {
-                "method": "Network.responseReceived",
-                "type": "response",
-                "search": "https://nclive.grtn.cn/zjpd/sd/live.m3u8?_upt="
-            }
-        ],
-        "redirect":""
-    },
-    {
         "host": "http://news.tvb.com/live/j5_ch85?is_hd",
         "filters": [
             {
                 "method": "Network.requestWillBeSent",
                 "type": "request",
-                "search": "http://wowza-live.edge-{}.akamai.tvb.com/newslive/smil:mobilehd_finance.smil/playlist.m3u8".format(locale)
+                "search": "https://prd-vcache.edge-global.akamai.tvb.com/__cl/slocalr2526/__c/ott_I-FINA_h264/__op/default/__f/index.m3u8"
             },
             {
                 "method": "Network.responseReceived",
                 "type": "response",
-                "search": "http://wowza-live.edge-{}.akamai.tvb.com/newslive/smil:mobilehd_finance.smil/playlist.m3u8".format(locale)
+                "search": "https://prd-vcache.edge-global.akamai.tvb.com/__cl/slocalr2526/__c/ott_I-FINA_h264/__op/default/__f/index.m3u8"
+            }
+        ],
+        "redirect":""
+    },
+    {
+        "host": "https://www.gdtv.cn/tvChannelDetail/44",
+        "filters": [
+            {
+                "method": "Network.requestWillBeSent",
+                "type": "request",
+                "search": "tcdn.itouchtv.cn/live/gdzj.m3u8"
+            },
+            {
+                "method": "Network.responseReceived",
+                "type": "response",
+                "search": "tcdn.itouchtv.cn/live/gdzj.m3u8"
             }
         ],
         "redirect":""
@@ -90,7 +88,7 @@ def stream(stream_id:int):
         logging.info("[/{}.m3u8 -> {}".format(str(stream_id),channel["redirect"]))
         return redirect(channel["redirect"])
     except Exception as e:
-        logging.error(str(e))
+        logging.error(str(configs[stream_id]))
         return redirect("https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8"), 200 
 
 @app.route('/update')
@@ -120,7 +118,7 @@ def get_stream_link(channel):
         chrome_driver.get(channel["host"])
         browser_log = chrome_driver.get_log('performance')
         events = [process_browser_log_entry(entry) for entry in browser_log]
-        
+
         result = None
         for stream in channel["filters"]:
             result = filter_log(events, stream)
@@ -149,15 +147,15 @@ def main():
 
 # Register task
 cron = BackgroundScheduler(daemon=True)
-cron.add_job(update_stream, 'interval', minutes=5)
+cron.add_job(update_stream, 'interval', hours=6)
 cron.start()
 atexit.register(lambda: cron.shutdown(wait=False))
 
 if __name__ == "__main__":
     # initialise channel
-    main()
+    # main()
 
     # initialise flask
     app.debug = False
     # app.run(host='127.0.0.1', port=5000)
-    app.run(host='0.0.0.0', port=5990)
+    app.run(host='0.0.0.0', port=20020)
