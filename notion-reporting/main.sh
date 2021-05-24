@@ -1,5 +1,5 @@
 #!/bin/bash
-source ./env/bin/activate
+source ./venv/bin/activate
 echo "[$(date)] Task Scheduling Service Started."
 echo "v0.01"
 
@@ -15,6 +15,6 @@ echo "Running Script:"
 for d in scripts/*
 do
     echo -e "\t ${d%/}"
-    sudo python3 $d "config.json" "status.log"
+    python3 $d "config.json" "logs/error.log"
 done
 echo "[$(date)] Task Completed."

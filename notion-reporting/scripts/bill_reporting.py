@@ -12,7 +12,7 @@ def init():
 
     CONFIG_FILE = "../config.json"
     CONFIG = None
-    LOG_FILE = "../status.log"
+    LOG_FILE = "../logs/error.log"
     LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 
     if len(sys.argv) > 2:

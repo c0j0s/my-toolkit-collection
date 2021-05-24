@@ -17,7 +17,7 @@ def nscalendar(access):
     else:
         return 404
 
-@app.route("/ptcalender/<access>")
+@app.route("/ptcalendar/<access>")
 def ptcalender(access):
     if str(access) == config["access_token"]:
         result = controller.get_pt_schedule()

@@ -11,12 +11,12 @@ def init():
 
     CONFIG_FILE = "../config.json"
     CONFIG = None
-    LOG_FILE = "../status.log"
+    LOG_FILE = "../logs/error.log"
     LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 
     if len(sys.argv) > 2:
         CONFIG_FILE = os.getcwd() + "/" + sys.argv[1] 
-        LOG_FILE = os.getcwd() + "/" + sys.argv[2] 
+        # LOG_FILE = os.getcwd() + "/" + sys.argv[2] 
 
     with open(CONFIG_FILE) as json_file:
         CONFIG = json.load(json_file)
