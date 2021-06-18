@@ -8,3 +8,4 @@ config.json
 env
 local.py
 test.py
+test.sh

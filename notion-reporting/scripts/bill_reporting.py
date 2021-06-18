@@ -4,7 +4,7 @@ from notion.client import NotionClient
 from notion.collection import NotionDate
 
 """
-v0.03
+v0.04
 """
 
 def init():
@@ -111,8 +111,8 @@ def main():
 def extractInfo(biller,source):
     
     bill = {}
-    bill["mth"], bill["year"] = re.findall(r"(?<=[Y|y]our ).{8}(?= e?[B|b]ill)",source)[0].split(" ")
-    bill["mth"] = bill["mth"].capitalize()
+    bill["mth"], bill["year"] = re.findall(r"(?<=[Y|y]our ).{8,9}(?= e?[B|b]ill)",source)[0].split(" ")
+    bill["mth"] = bill["mth"][:3].capitalize()
 
     if biller == "collection@unionpower.com.sg":
         bill["elec"] = re.findall(r"(?<=Usage ).*(?= kWh)",source)[0]
