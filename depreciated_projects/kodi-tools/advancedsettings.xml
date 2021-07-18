@@ -1,17 +1,17 @@
 <advancedsettings>
   <videodatabase>
     <type>mysql</type>
-    <host>152.67.109.29</host>
+    <host>0.0.0.0</host>
     <port>3306</port>
-    <user>kodi</user>
-    <pass>cjs@kodi</pass>
+    <user></user>
+    <pass></pass>
   </videodatabase> 
   <musicdatabase>
     <type>mysql</type>
-    <host>152.67.109.29</host>
+    <host>0.0.0.0</host>
     <port>3306</port>
-    <user>kodi</user>
-    <pass>cjs@kodi</pass>
+    <user></user>
+    <pass></pass>
   </musicdatabase>
   <videolibrary>
     <importwatchedstate>true</importwatchedstate>
