@@ -1,1 +1,2 @@
 git+https://github.com/c0j0s/notion-py.git
+python-telegram-bot==13.5
