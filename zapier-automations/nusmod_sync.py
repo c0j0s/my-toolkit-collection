@@ -1,7 +1,7 @@
-input_data = {'moduleCode': 'CS1010J'}
+input_data = {'moduleCode': 'ES1000'}
 
 """
-Start of Zapier Script Body (v0.01)
+Start of Zapier Script Body (v0.02)
 """
 import requests, datetime
 output = {}
@@ -22,19 +22,22 @@ else:
         if response.status_code == 200:
             output = response.json()
 
-            output['availableSem'] = [
-                "SEM1" if 'mpes1' in output['attributes'] and output['attributes']['mpes1'] else '',
-                "SEM2" if 'mpes2' in output['attributes'] and output['attributes']['mpes2'] else ''
-            ]
-            output['su'] = output['attributes']['su'] if 'su' in output['attributes'] else False
+            if 'attributes' in output:
+                output['availableSem'] = [
+                    "SEM1" if 'mpes1' in output['attributes'] and output['attributes']['mpes1'] else '',
+                    "SEM2" if 'mpes2' in output['attributes'] and output['attributes']['mpes2'] else ''
+                ]
+                output['su'] = output['attributes']['su'] if 'su' in output['attributes'] else False
 
-            output['exams'] = []
-            for item in output['semesterData']:
-                if 'examDate' in item:
-                    output['exams'].append('Date:{} Dur:{}Min'.format(item['examDate'],item['examDuration']))
+                output['exams'] = []
+                for item in output['semesterData']:
+                    if 'examDate' in item:
+                        output['exams'].append('Date:{} Dur:{}Min'.format(item['examDate'],item['examDuration']))
 
-            del output['attributes']
-            del output['semesterData']
+                del output['attributes']
+
+            if 'semesterData' in output:
+                del output['semesterData']
         else:
             output['debug'] = response.status_code
 
