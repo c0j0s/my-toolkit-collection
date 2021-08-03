@@ -1,0 +1,10 @@
+{
+    "access_token":"<REMOVED>",
+    "debug":false,
+    "log_file":"logs/error.log",
+    "log_format":"%(asctime)s - %(levelname)s - %(message)s",
+    "host":"<REMOVED>",
+    "port":<REMOVED>,
+    "notion_token":"<REMOVED>",
+    "bot_token":"<REMOVED>"
+}
